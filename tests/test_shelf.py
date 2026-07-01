@@ -68,20 +68,24 @@ def test_tank_view_returns_200_for_configured_tank(multi_tank_client):
     assert multi_tank_client.get("/tank/frag-tank").status_code == 200
 
 
-def test_tank_view_placeholder_region_present(multi_tank_client):
-    """Task #6 fills the placeholder; it must exist scoped to the active tank."""
+def test_tank_view_opens_the_aggregate_overview(multi_tank_client):
+    """Selecting a tank opens straight into its Aggregate overview (cards +
+    overlay + history), scoped to that tank, with the parameter tabs above."""
     body = multi_tank_client.get("/tank/reef-a").get_data(as_text=True)
-    assert "reef-tabs-placeholder" in body
+    assert 'data-tank-id="reef-a"' in body
+    assert "reef-aggregate" in body  # the combined overview is the default panel
+    assert "reef-tabs" in body       # the parameter tabs are the primary nav now
 
 
 # --------------------------------------------------------------------------- #
-# Persistent switcher: lists all tanks and clearly indicates the active one
+# No redundant tank switcher: the tank is chosen on the shelf, not re-picked
 # --------------------------------------------------------------------------- #
-def test_switcher_lists_all_tanks(multi_tank_client):
+def test_tank_view_has_no_redundant_switcher_but_links_home(multi_tank_client):
     body = multi_tank_client.get("/tank/reef-a").get_data(as_text=True)
-    assert "reef-switcher" in body
-    assert "Reef A" in body
-    assert "Frag Tank" in body
+    # The old all-tanks switcher is gone (redundant after picking from the shelf).
+    assert "reef-switcher" not in body
+    # Navigation back to the shelf stays available via the breadcrumb.
+    assert "All tanks" in body
 
 
 def test_switcher_marks_active_tank(multi_tank_client):

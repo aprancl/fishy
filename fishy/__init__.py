@@ -579,26 +579,11 @@ def _register_routes(app: Flask) -> None:
 
     @app.route("/tank/<tank_id>")
     def tank_view(tank_id: str):  # pragma: no cover - exercised via test client
-        """Tank View scoped to ``tank_id`` (the active-tank source of truth)."""
-        config: Config = app.config["FISHY_CONFIG"]
-        active_tank = config.tank(tank_id)
-        if active_tank is None:
-            abort(404, description=f"No tank configured with id '{tank_id}'.")
-        return render_template(
-            "tank.html",
-            **_shell(
-                tanks=config.tanks,
-                active_tank=active_tank,
-                # Tabs derive from config (one per parameter); no tab is active on
-                # the bare tank landing. Surface any archived/unknown parameters.
-                parameters=config.parameters,
-                active_param=None,
-                active_tab=None,
-                unknown_params=_unknown_param_ids(tank_id),
-                # Non-fatal malformed-row notice (task #15).
-                load_warnings=_load_warnings(),
-            ),
-        )
+        """Tank View — selecting a tank opens straight into its Aggregate
+        overview (cards + overlay + history) with the parameter tabs above for
+        drilling into a single metric. ``/tank/<id>`` and ``/tank/<id>/aggregate``
+        render the same page (no redundant re-selection of the tank)."""
+        return _render_aggregate(tank_id)
 
     def _resolve(tank_id: str, param_id: str):
         """Resolve (active_tank, parameter) from the path or ``abort(404)``."""
@@ -681,16 +666,20 @@ def _register_routes(app: Flask) -> None:
             url_for("parameter_view", tank_id=active_tank.id, param_id=parameter.id)
         )
 
-    @app.route("/tank/<tank_id>/aggregate")
-    def aggregate_view(tank_id: str):  # pragma: no cover - exercised via test client
-        """Combined Aggregate tab for one tank (spec §5.7).
+    def _render_aggregate(tank_id: str):
+        """Render one tank's combined Aggregate overview (spec §5.7).
 
         Shows every configured parameter for the active tank at once: a cards
         row (latest / trend / in-range badge per parameter) and an all-parameter
-        overlay chart on a shared, normalized timeline. Everything is scoped to
-        ``tank_id`` from the path (no cross-tank comparison in v1) and reuses the
-        chart contract (#7), stats contract (#8) and per-tank range resolution
-        (#9), so per-tank ranges and highlighting apply here for free.
+        overlay chart on a shared, normalized timeline, plus the full reading
+        history. Everything is scoped to ``tank_id`` from the path (no cross-tank
+        comparison in v1) and reuses the chart contract (#7), stats contract (#8)
+        and per-tank range resolution (#9).
+
+        This is the shared body behind BOTH the tank-view default landing
+        (``/tank/<id>``) and the explicit ``/tank/<id>/aggregate`` URL, so
+        selecting a tank opens straight into its overview with the parameter tabs
+        above for drilling into a single metric.
         """
         config: Config = app.config["FISHY_CONFIG"]
         active_tank = config.tank(tank_id)
@@ -724,11 +713,19 @@ def _register_routes(app: Flask) -> None:
                 overlay=_aggregate_series(series_list),
                 has_any_readings=any(s["points"] for s in series_list),
                 history=history,
+                # Surface any archived/unknown-parameter ids as a gentle heads-up
+                # next to the tabs (readings for params no longer in config).
+                unknown_params=_unknown_param_ids(tank_id),
                 # Non-fatal malformed-row notice (task #15): reuse the same load
                 # so valid rows above still render while skipped rows are listed.
                 load_warnings=load_result.warnings,
             ),
         )
+
+    @app.route("/tank/<tank_id>/aggregate")
+    def aggregate_view(tank_id: str):  # pragma: no cover - exercised via test client
+        """Explicit Aggregate URL — the same overview as the tank-view landing."""
+        return _render_aggregate(tank_id)
 
     @app.route("/health")
     def health():  # pragma: no cover - exercised via test client

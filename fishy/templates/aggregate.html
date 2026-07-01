@@ -25,22 +25,6 @@
   pages, so switching tanks or tabs keeps scope. `active_tab == "aggregate"`
   marks the Aggregate tab active.
 #}
-<nav class="reef-switcher" aria-label="Switch tank">
-  <span class="reef-switcher__label">Tank:</span>
-  <ul class="reef-switcher__list" role="list">
-    {% for tank in tanks %}
-    <li>
-      <a class="reef-switcher__link{% if tank.id == active_tank.id %} is-active{% endif %}"
-         href="{{ url_for('tank_view', tank_id=tank.id) }}"
-         {% if tank.id == active_tank.id %}aria-current="page"{% endif %}>
-        {% if tank.id == active_tank.id %}<span aria-hidden="true">{{ icon("check") }}</span> {% endif %}{{ tank.label }}
-      </a>
-    </li>
-    {% endfor %}
-  </ul>
-  <a class="reef-switcher__home" href="{{ url_for('index') }}">← All tanks</a>
-</nav>
-
 {# Non-fatal malformed-CSV notice (task #15): lists any skipped rows; valid
    cards/overlay/history below still load. Renders nothing when data is clean. #}
 {% include "_notice.html" %}
@@ -62,10 +46,35 @@
   {# Parameter tab navigation — the Aggregate tab is marked active. #}
   {% include "_param_tabs.html" %}
 
+  {# Archived/unknown parameters: readings whose parameter id is no longer in
+     config. They get no real tab, so surface them gently here (they still show
+     in the history table below) rather than dropping them silently. #}
+  {% if unknown_params %}
+  <p class="reef-tabs__archived reef-muted" role="note">
+    <span aria-hidden="true">{{ icon("warning") }}</span>
+    Heads up: this tank has readings for
+    {% for pid in unknown_params %}<code>{{ pid }}</code>{% if not loop.last %}, {% endif %}{% endfor %},
+    which {{ 'is' if unknown_params | length == 1 else 'are' }} not in your
+    current config (archived or unknown parameter{{ 's' if unknown_params | length != 1 }}).
+    Re-add {{ 'it' if unknown_params | length == 1 else 'them' }} to
+    <code>config/fishy.toml</code> to get {{ 'its' if unknown_params | length == 1 else 'their' }} tab back.
+  </p>
+  {% endif %}
+
   <div class="reef-aggregate__panel" role="tabpanel"
        aria-label="Aggregate view for {{ active_tank.label }}">
 
-    {% if not has_any_readings %}
+    {% if not parameters %}
+    {# No parameters configured yet: there are no tabs to point at, so guide the
+       user to add one to config rather than showing a "log a reading" prompt. #}
+    <div class="reef-empty reef-empty--inline">
+      <p><span aria-hidden="true">{{ icon("shell") }}</span> No parameters configured yet</p>
+      <p class="reef-muted">
+        Add a <code>[[parameters]]</code> block to <code>config/fishy.toml</code>
+        to start tracking one — a tab will appear here automatically.
+      </p>
+    </div>
+    {% elif not has_any_readings %}
     {# Friendly, actionable empty state (task #15): points to the parameter tabs
        to log the first reading. `.reef-empty` marks it for uniform theming (#14). #}
     <p class="reef-muted reef-aggregate__empty reef-empty">
