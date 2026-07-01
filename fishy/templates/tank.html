@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}{{ app_name }} — {{ active_tank.label }}{% endblock %}
 
@@ -16,7 +17,7 @@
       <a class="reef-switcher__link{% if tank.id == active_tank.id %} is-active{% endif %}"
          href="{{ url_for('tank_view', tank_id=tank.id) }}"
          {% if tank.id == active_tank.id %}aria-current="page"{% endif %}>
-        {% if tank.id == active_tank.id %}<span aria-hidden="true">✓</span> {% endif %}{{ tank.label }}
+        {% if tank.id == active_tank.id %}<span aria-hidden="true">{{ icon("check") }}</span> {% endif %}{{ tank.label }}
       </a>
     </li>
     {% endfor %}
@@ -30,9 +31,13 @@
 
 <section class="reef-tankview" data-tank-id="{{ active_tank.id }}">
   <h2 class="reef-tankview__title">
-    <span aria-hidden="true">🐠</span> {{ active_tank.label }}
+    <span aria-hidden="true">{{ icon("tank") }}</span> {{ active_tank.label }}
   </h2>
   <p class="reef-muted">Viewing tank <code>{{ active_tank.id }}</code>.</p>
+
+  {# Signature accent (task #5, spec §5.3): a lone wave-form ornament marking the
+     boundary between the tank header and its parameter tabs. Decorative only. #}
+  <div class="reef-wave-divider" aria-hidden="true">{{ icon("wave") }}</div>
 
   {#
     Parameter tab navigation (task #6). One tab per configured parameter plus an
@@ -52,7 +57,7 @@
     </p>
     {% else %}
     <div class="reef-empty reef-empty--inline">
-      <p>No parameters configured yet 🐚</p>
+      <p><span aria-hidden="true">{{ icon("shell") }}</span> No parameters configured yet</p>
       <p class="reef-muted">
         Add a <code>[[parameters]]</code> block to <code>config/fishy.toml</code>
         to start tracking one — a tab will appear here automatically.
@@ -67,7 +72,7 @@
     #}
     {% if unknown_params %}
     <p class="reef-tabs__archived reef-muted" role="note">
-      <span aria-hidden="true">🗄️</span>
+      <span aria-hidden="true">{{ icon("warning") }}</span>
       Heads up: this tank has readings for
       {% for pid in unknown_params %}<code>{{ pid }}</code>{% if not loop.last %}, {% endif %}{% endfor %},
       which {{ 'is' if unknown_params | length == 1 else 'are' }} not in your

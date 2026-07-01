@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}{{ app_name }} — {{ active_tank.label }} · {{ parameter.display_name }}{% endblock %}
 
@@ -48,7 +49,7 @@
          data-tank-id="{{ active_tank.id }}"
          data-parameter-id="{{ parameter.id }}">
   <h2 class="reef-parameter__title">
-    <span aria-hidden="true">🐠</span> {{ parameter.display_name }}
+    <span aria-hidden="true">{{ icon("fish") }}</span> {{ parameter.display_name }}
     <span class="reef-muted">· {{ active_tank.label }}</span>
   </h2>
 
@@ -81,9 +82,9 @@
           <span class="reef-stat__label">Latest</span>
           <span class="reef-stat__value">{{ stats.latest.value_display }}{% if stats.unit %} <span class="reef-stat__unit">{{ stats.unit }}</span>{% endif %}</span>
           {% if stats.latest.in_range %}
-          <span class="reef-badge reef-badge--in"><span aria-hidden="true">✓</span> In range</span>
+          <span class="reef-badge reef-badge--in"><span aria-hidden="true">{{ icon("check") }}</span> In range</span>
           {% else %}
-          <span class="reef-badge reef-badge--out"><span aria-hidden="true">⚠</span> Out of range</span>
+          <span class="reef-badge reef-badge--out"><span aria-hidden="true">{{ icon("warning") }}</span> Out of range</span>
           {% endif %}
         </li>
         <li class="reef-stat reef-stat--trend">

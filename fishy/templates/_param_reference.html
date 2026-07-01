@@ -14,6 +14,7 @@
   custom parameter falling back to `_template.md` — render as a gentle
   placeholder rather than an error.
 #}
+{% from "_icons.html" import icon %}
 {% set ref_labels = {
      "definition":  "What it is",
      "measurement": "How it's measured",
@@ -25,7 +26,7 @@
    } %}
 <div class="reef-reference__head">
   <h3 class="reef-reference__title">
-    <span aria-hidden="true">📖</span> Reference &amp; action guide
+    <span aria-hidden="true">{{ icon("book") }}</span> Reference &amp; action guide
   </h3>
   <p class="reef-muted reef-reference__lede">
     What {{ parameter.display_name }} is, how to measure it, and what to do when it drifts.

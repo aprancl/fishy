@@ -1,0 +1,81 @@
+{#
+  Marine SVG line-art system  (spec §5.0 / §5.3 / §9.1).
+
+  A single source of truth for fishy's bespoke, thin-stroke marine + UI glyphs
+  that replace emoji. Import the macro and call it by glyph name:
+
+      {% from "_icons.html" import icon %}
+      {{ icon("coral") }}                          -- decorative accent
+      {{ icon("fish", cls="reef-icon--lg") }}      -- larger, still inline
+      {{ icon("check", decorative=false,
+              title="In range") }}                 -- semantic, labelled icon
+
+  Design rules (kept consistent across EVERY glyph so the set reads as one hand):
+    * 24x24 viewBox, `fill="none"`, `stroke="currentColor"`, thin 1.6 stroke,
+      round caps + joins. Using `currentColor` means each glyph inherits the
+      surrounding text colour and themes automatically with the palette tokens.
+    * Static, developer-authored markup only — never user-supplied SVG, and no
+      new runtime dependency (this is plain Jinja + inline SVG).
+    * Decorative by default: `aria-hidden` + `focusable="false"`, so assistive
+      tech skips it and it never adds a stray tab stop. Pass `decorative=false`
+      with a `title` to expose a semantic, labelled icon.
+    * Sized in `em` through the `.reef-icon` CSS class, so a glyph scales with
+      its local font-size and causes no layout shift at small or large sizes.
+      Size modifiers (`.reef-icon--sm/--lg/--xl`) are plain CSS classes.
+
+  Starter set: coral, fish, wave (marine motifs) + check, warning, chart, book,
+  shell, tank (functional UI glyphs currently carried by emoji).
+#}
+
+{%- macro icon(name, cls="", title=none, decorative=true) -%}
+<svg class="reef-icon{% if cls %} {{ cls }}{% endif %}" viewBox="0 0 24 24"
+     fill="none" stroke="currentColor" stroke-width="1.6"
+     stroke-linecap="round" stroke-linejoin="round"
+     {% if decorative %}aria-hidden="true" focusable="false"{% else %}role="img"{% if title %} aria-label="{{ title }}"{% endif %}{% endif %}
+     data-icon="{{ name }}">{% if not decorative and title %}<title>{{ title }}</title>{% endif %}{{ _glyph(name) }}</svg>
+{%- endmacro -%}
+
+{#- Path data for each named glyph. Returns Markup (safe) so tags render raw. -#}
+{%- macro _glyph(name) -%}
+  {%- if name == "coral" -%}
+    <path d="M12 21v-6"/>
+    <path d="M12 17c-.6-1.4-1.8-2.2-3.2-2.6-1.9-.5-2.6-2.3-2.4-4.1"/>
+    <path d="M12 15.5c.6-1.6 1.9-2.6 3.5-3 1.7-.5 2.3-2.1 2.1-3.7"/>
+    <path d="M12 13.5c-.3-1.4-.2-2.8.5-4.1.7-1.2.6-2.6-.1-3.9"/>
+    <circle cx="6.4" cy="9.4" r="1.2"/>
+    <circle cx="17.6" cy="8.1" r="1.2"/>
+    <circle cx="12.5" cy="4.8" r="1.2"/>
+  {%- elif name == "fish" -%}
+    <path d="M4 12c2.4-3.4 6.6-4.6 10.4-3.4 2.6.8 4.4 2.1 4.4 3.4s-1.8 2.6-4.4 3.4C10.6 16.6 6.4 15.4 4 12Z"/>
+    <path d="M4 12 1.4 9v6L4 12Z"/>
+    <circle cx="16.4" cy="11" r=".7" fill="currentColor" stroke="none"/>
+  {%- elif name == "wave" -%}
+    <path d="M2 13c3-4.2 6-4.2 9 0s6 4.2 9 0"/>
+  {%- elif name == "check" -%}
+    <path d="M4 12.5 9 17.5 20 6.5"/>
+  {%- elif name == "warning" -%}
+    <path d="M12 3.5 22 20.5H2L12 3.5Z"/>
+    <path d="M12 10v5"/>
+    <path d="M12 17.6h.01"/>
+  {%- elif name == "chart" -%}
+    <path d="M4 4v16h16"/>
+    <path d="M7 15 11 11l3 2 5-6"/>
+  {%- elif name == "book" -%}
+    <path d="M12 6C10 4.6 6.4 4.4 4 5.5V19c2.4-1.1 6-.9 8 .5 2-1.4 5.6-1.6 8-.5V5.5C17.6 4.4 14 4.6 12 6Z"/>
+    <path d="M12 6v13.5"/>
+  {%- elif name == "shell" -%}
+    <path d="M12 20C7 20 3.4 15.6 4.2 10.4"/>
+    <path d="M12 20c5 0 8.6-4.4 7.8-9.6"/>
+    <path d="M4.2 10.4C5 6.6 8.2 4 12 4s7 2.6 7.8 6.4"/>
+    <path d="M12 20V4"/>
+    <path d="M12 20C10.8 15 9.4 11 7 7.6"/>
+    <path d="M12 20c1.2-5 2.6-9 5-12.4"/>
+  {%- elif name == "tank" -%}
+    <rect x="3.5" y="6" width="17" height="13" rx="2.2"/>
+    <path d="M3.5 11c2.4-1.6 4.8 1.4 7.2 0 2.4-1.4 5.4 1.4 9.8-.4"/>
+    <circle cx="15.5" cy="15" r="1"/>
+    <path d="M8 19v-4.5"/>
+  {%- else -%}
+    {#- unknown glyph name: render nothing (fail-quiet). -#}
+  {%- endif -%}
+{%- endmacro -%}

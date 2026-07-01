@@ -26,9 +26,16 @@
   var OUT_RANGE_COLOR = "#e4572e"; /* coral red — out of range */
   var IN_RANGE_SYMBOL = "circle";  /* round = healthy (non-colour cue) */
   var OUT_RANGE_SYMBOL = "triangle-up"; /* distinct SHAPE = out of range (§6.4) */
+  /* Themed type: Nunito body, Baloo 2 display for axis titles (matches the
+     app's --reef-font-body / --reef-font-display tokens). */
   var THEME_FONT =
     'Nunito, "Segoe UI", system-ui, -apple-system, sans-serif';
-  var THEME_INK = "#06323f";
+  var THEME_DISPLAY_FONT =
+    '"Baloo 2", Nunito, "Segoe UI", system-ui, sans-serif';
+  var THEME_INK = "#06323f";   /* --reef-ink */
+  var THEME_MUTED = "#4d6b78"; /* --reef-muted — ticks + axis lines */
+  var THEME_GRID = "rgba(11, 79, 108, 0.08)"; /* subtle deep-ocean gridlines */
+  var THEME_DEEP = "#0b4f6c";  /* --reef-deep — hover surface */
 
   /* A qualitative palette so each parameter's line is easy to tell apart.
      Cycled if there are more parameters than colours. */
@@ -77,7 +84,7 @@
       // Carry the real value so the hover shows it (the y-axis is normalized).
       customdata: points.map(function (p) { return p.value; }),
       name: legendName(series),
-      line: { color: color, width: 2 },
+      line: { color: color, width: 2.5 },
       marker: {
         color: markerColors,
         symbol: markerSymbols,
@@ -124,21 +131,40 @@
       return;
     }
 
+    var axisBase = {
+      gridcolor: THEME_GRID,
+      zeroline: false,
+      linecolor: "rgba(11, 79, 108, 0.18)",
+      tickfont: { family: THEME_FONT, color: THEME_MUTED, size: 12 },
+      titlefont: { family: THEME_DISPLAY_FONT, color: THEME_INK, size: 14 }
+    };
+
     var layout = {
-      margin: { t: 12, r: 16, b: 44, l: 52 },
-      font: { family: THEME_FONT, color: THEME_INK },
-      xaxis: { title: "Date", type: "date", gridcolor: "rgba(11,79,108,0.08)" },
-      yaxis: {
-        title: "Normalized (0–1)",
-        range: [-0.05, 1.05],
-        fixedrange: true,
-        gridcolor: "rgba(11,79,108,0.08)"
-      },
+      margin: { t: 16, r: 18, b: 48, l: 56 },
+      font: { family: THEME_FONT, color: THEME_INK, size: 13 },
+      xaxis: Object.assign({ title: "Date", type: "date" }, axisBase),
+      yaxis: Object.assign(
+        { title: "Normalized (0–1)", range: [-0.05, 1.05], fixedrange: true },
+        axisBase
+      ),
       showlegend: true,
-      legend: { orientation: "h", x: 0, y: 1.12 },
+      // Horizontal legend above the plot wraps to multiple rows, keeping many
+      // overlaid series legible at narrow widths (spec §5.6 edge case).
+      legend: {
+        orientation: "h",
+        x: 0,
+        y: 1.14,
+        font: { family: THEME_FONT, color: THEME_INK, size: 12 },
+        bgcolor: "rgba(0,0,0,0)"
+      },
       paper_bgcolor: "rgba(0,0,0,0)",
       plot_bgcolor: "rgba(0,0,0,0)",
-      hovermode: "closest"
+      hovermode: "closest",
+      hoverlabel: {
+        bgcolor: THEME_DEEP,
+        bordercolor: THEME_DEEP,
+        font: { family: THEME_FONT, color: "#ffffff", size: 13 }
+      }
     };
 
     var config = { responsive: true, displayModeBar: false };

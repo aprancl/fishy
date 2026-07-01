@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}{{ app_name }} — {{ active_tank.label }} · Aggregate{% endblock %}
 
@@ -32,7 +33,7 @@
       <a class="reef-switcher__link{% if tank.id == active_tank.id %} is-active{% endif %}"
          href="{{ url_for('tank_view', tank_id=tank.id) }}"
          {% if tank.id == active_tank.id %}aria-current="page"{% endif %}>
-        {% if tank.id == active_tank.id %}<span aria-hidden="true">✓</span> {% endif %}{{ tank.label }}
+        {% if tank.id == active_tank.id %}<span aria-hidden="true">{{ icon("check") }}</span> {% endif %}{{ tank.label }}
       </a>
     </li>
     {% endfor %}
@@ -54,7 +55,7 @@
   </nav>
 
   <h2 class="reef-aggregate__title">
-    <span aria-hidden="true">📊</span> Aggregate
+    <span aria-hidden="true">{{ icon("chart") }}</span> Aggregate
     <span class="reef-muted">· {{ active_tank.label }}</span>
   </h2>
 
@@ -101,9 +102,9 @@
             <span class="reef-trend reef-trend--flat reef-muted"><span aria-hidden="true">•</span> Single reading</span>
             {% endif %}
             {% if card.stats.latest.in_range %}
-            <span class="reef-badge reef-badge--in"><span aria-hidden="true">✓</span> In range</span>
+            <span class="reef-badge reef-badge--in"><span aria-hidden="true">{{ icon("check") }}</span> In range</span>
             {% else %}
-            <span class="reef-badge reef-badge--out"><span aria-hidden="true">⚠</span> Out of range</span>
+            <span class="reef-badge reef-badge--out"><span aria-hidden="true">{{ icon("warning") }}</span> Out of range</span>
             {% endif %}
           </div>
           {% else %}
@@ -177,7 +178,7 @@
               <td class="reef-history__value">
                 {{ row.value_display }}{% if row.unit %} <span class="reef-history__unit">{{ row.unit }}</span>{% endif %}
                 {% if not row.in_range %}
-                <span class="reef-badge reef-badge--out reef-history__badge"><span aria-hidden="true">⚠</span> Out of range</span>
+                <span class="reef-badge reef-badge--out reef-history__badge"><span aria-hidden="true">{{ icon("warning") }}</span> Out of range</span>
                 {% endif %}
               </td>
               <td class="reef-history__note-cell">{{ row.note }}</td>

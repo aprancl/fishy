@@ -12,10 +12,11 @@
 
   Standardized class for task #14 to theme: `.reef-notice` (+ `.reef-notice--warn`).
 #}
+{% from "_icons.html" import icon %}
 {% if load_warnings %}
 <div class="reef-notice reef-notice--warn" role="status" aria-live="polite">
   <p class="reef-notice__lead">
-    <span class="reef-notice__icon" aria-hidden="true">⚠️</span>
+    <span class="reef-notice__icon" aria-hidden="true">{{ icon("warning") }}</span>
     <strong>{{ load_warnings | length }} row{{ 's' if load_warnings | length != 1 }}</strong>
     in your data file <code>data/readings.csv</code>
     {{ 'was' if load_warnings | length == 1 else 'were' }} skipped while loading.

@@ -21,10 +21,20 @@
   var OUT_RANGE_COLOR = "#e4572e"; /* coral red — out of range */
   var IN_RANGE_SYMBOL = "circle";  /* round = healthy (non-colour cue) */
   var OUT_RANGE_SYMBOL = "triangle-up"; /* distinct SHAPE = out of range (§6.4) */
-  var BAND_FILL = "rgba(1, 186, 239, 0.12)";
+  /* Soft, on-brand coral target-range band (spec §5.6) — a warm safe-zone wash
+     that reads as "ideal" without competing with the teal series line. */
+  var BAND_FILL = "rgba(255, 107, 94, 0.10)";
+  var BAND_LINE = "rgba(255, 107, 94, 0.28)";
+  /* Themed type: Nunito body, Baloo 2 display for axis titles (matches the
+     app's --reef-font-body / --reef-font-display tokens). */
   var THEME_FONT =
     'Nunito, "Segoe UI", system-ui, -apple-system, sans-serif';
-  var THEME_INK = "#06323f";
+  var THEME_DISPLAY_FONT =
+    '"Baloo 2", Nunito, "Segoe UI", system-ui, sans-serif';
+  var THEME_INK = "#06323f";   /* --reef-ink */
+  var THEME_MUTED = "#4d6b78"; /* --reef-muted — ticks + axis lines */
+  var THEME_GRID = "rgba(11, 79, 108, 0.08)"; /* subtle deep-ocean gridlines */
+  var THEME_DEEP = "#0b4f6c";  /* --reef-deep — hover surface */
 
   function renderChart(host) {
     var script = host.querySelector("script.reef-chart-data");
@@ -73,7 +83,7 @@
       x: dates,
       y: values,
       name: data.display_name || "value",
-      line: { color: IN_RANGE_COLOR, width: 2 },
+      line: { color: IN_RANGE_COLOR, width: 2.5 },
       marker: {
         color: markerColors,
         symbol: markerSymbols,
@@ -105,21 +115,34 @@
         y0: y0,
         y1: y1,
         fillcolor: BAND_FILL,
-        line: { width: 0 },
+        line: { color: BAND_LINE, width: 1 },
         layer: "below"
       });
     }
 
+    var axisBase = {
+      gridcolor: THEME_GRID,
+      zeroline: false,
+      linecolor: "rgba(11, 79, 108, 0.18)",
+      tickfont: { family: THEME_FONT, color: THEME_MUTED, size: 12 },
+      titlefont: { family: THEME_DISPLAY_FONT, color: THEME_INK, size: 14 }
+    };
+
     var layout = {
-      margin: { t: 12, r: 16, b: 44, l: 52 },
+      margin: { t: 16, r: 18, b: 48, l: 56 },
       shapes: shapes,
-      font: { family: THEME_FONT, color: THEME_INK },
-      xaxis: { title: "Date", type: "date", gridcolor: "rgba(11,79,108,0.08)" },
-      yaxis: { title: data.unit || "Value", gridcolor: "rgba(11,79,108,0.08)" },
+      font: { family: THEME_FONT, color: THEME_INK, size: 13 },
+      xaxis: Object.assign({ title: "Date", type: "date" }, axisBase),
+      yaxis: Object.assign({ title: data.unit || "Value" }, axisBase),
       showlegend: false,
       paper_bgcolor: "rgba(0,0,0,0)",
       plot_bgcolor: "rgba(0,0,0,0)",
-      hovermode: "closest"
+      hovermode: "closest",
+      hoverlabel: {
+        bgcolor: THEME_DEEP,
+        bordercolor: THEME_DEEP,
+        font: { family: THEME_FONT, color: "#ffffff", size: 13 }
+      }
     };
 
     var config = { responsive: true, displayModeBar: false };

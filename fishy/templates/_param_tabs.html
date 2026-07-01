@@ -20,6 +20,7 @@
   empty region already waits at the bottom of aggregate.html), so no change is
   needed here for #13.
 #}
+{% from "_icons.html" import icon %}
 <nav class="reef-tabs" aria-label="Parameters">
   <ul class="reef-tabs__list" role="list">
     {% for param in parameters %}
@@ -41,7 +42,7 @@
          href="{{ url_for('aggregate_view', tank_id=active_tank.id) }}"
          data-tab="aggregate"
          {% if active_tab == 'aggregate' %}aria-current="page"{% endif %}>
-        <span aria-hidden="true">📊</span> Aggregate
+        <span aria-hidden="true">{{ icon("chart") }}</span> Aggregate
       </a>
     </li>
   </ul>

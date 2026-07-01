@@ -1,3 +1,4 @@
+{% from "_icons.html" import icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,7 +28,7 @@
 <body>
   <header class="reef-header">
     <div class="reef-header__inner">
-      <span class="reef-logo" aria-hidden="true">🐠</span>
+      <span class="reef-logo" aria-hidden="true">{{ icon("fish") }}</span>
       <div>
         <h1 class="reef-title">{{ app_name | default('fishy') }}</h1>
         <p class="reef-tagline">{{ tagline | default('reef water-parameter notebook') }}</p>

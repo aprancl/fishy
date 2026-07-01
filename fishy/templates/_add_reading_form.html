@@ -13,6 +13,7 @@
     * form  — the previously submitted {value, date, note} to repopulate fields
     * today — ISO date string used as the editable default (auto-captured now)
 #}
+{% from "_icons.html" import icon %}
 <form class="reef-add-reading"
       method="post"
       action="{{ url_for('add_reading', tank_id=active_tank.id, param_id=parameter.id) }}"
@@ -23,7 +24,7 @@
 
   {% if error %}
   <p class="reef-add-reading__error" role="alert">
-    <span aria-hidden="true">⚠️</span> {{ error }}
+    <span aria-hidden="true">{{ icon("warning") }}</span> {{ error }}
   </p>
   {% endif %}
 

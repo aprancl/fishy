@@ -88,7 +88,15 @@ Templates & CSS conventions:
 
 - Parameter page seams (`parameter.html` panel): `.reef-chart` / `.reef-stats` / `.reef-reference` (each `data-parameter-id`). Tab nav = `_param_tabs.html` (links; `is-active` + `aria-current`). Aggregate = `aggregate.html` (`.reef-aggregate__history` holds the table).
 - Status/state classes (kept stable — tests assert them): `.reef-badge--in/--out`, `.reef-history__row--out`, `.reef-empty` (+`--inline`), `.reef-notice--warn`, `.reef-stat`, `.reef-trend`.
-- Charts (`static/js/chart.js`, `aggregate.js`): in-range teal `#01baef` / out-of-range coral `#e4572e`, and out-of-range also uses a distinct marker SHAPE (non-color cue per §6.4). Inline JSON contract (`{{ ... | tojson }}`), no data endpoints.
+- Charts (`static/js/chart.js`, `aggregate.js`): in-range teal `#01baef` / out-of-range coral `#e4572e`, and out-of-range also uses a distinct marker SHAPE (non-color cue per §6.4). Inline JSON contract (`{{ ... | tojson }}`), no data endpoints. Plotly styling (fonts/gridlines/coral range band/transparent bg) lives in the JS; the exact literals `IN_RANGE_SYMBOL = "circle"` / `OUT_RANGE_SYMBOL = "triangle-up"` are test-asserted in BOTH files — never rename.
+
+Visual design system (added by the `ui-revamp` spec — `specs/ui-revamp-SPEC.md`). All hand-rolled CSS + inline SVG; **zero runtime deps**:
+
+- **Icon macro** (`templates/_icons.html`): `{% from "_icons.html" import icon %}` then `{{ icon(name, cls="", title=none, decorative=true) }}`. Glyphs: `coral, fish, wave` (motifs) + `check, warning, chart, book, shell, tank` (UI). 24×24 thin-stroke, `stroke=currentColor` (auto-themes), `data-icon="{name}"`, aria-hidden by default. **This replaced nearly all emoji** — don't reintroduce emoji; add glyphs to the macro instead.
+- **Design tokens** in `style.css` `:root` (extend, don't hard-code): glass `--glass-blur-*`/`--glass-fill-*`/`--glass-tint-*`/`--glass-border`; elevation `--reef-elev-rest/-hover/-lifted`; spacing `--reef-space-3xs…2xl`; type `--reef-text-xs…3xl` (note: `--reef-text-base`, not `-md`) + `--reef-leading-*`/`--reef-tracking-*`; motif `--motif-*`; motion `--reef-dur-fast/base/entrance` + `--reef-ease`; layout width `--reef-content-max` (`min(1480px, 93vw)`, on `body`) — the header inner + `.reef-main` use it so the app fills the page rather than a 960px column. Original palette/gradient/font/radius names are preserved (test_theme.py asserts several `--reef-*` names + strings like `.reef-header::after`, `.reef-footer::before`, `prefers-reduced-motion`).
+- **Glass system**: frosted surfaces (cards, header, pills, buttons, chart frames) with a `@supports not (backdrop-filter)` solid fallback. Keep text on a sufficiently opaque backing.
+- **CSS is organized as sequential, clearly-commented sections appended at EOF** (one per revamp task). When adding style, append a new section or use targeted Edits — the file is ~2000 lines; never full-file rewrite. Motion additions must be covered by the `prefers-reduced-motion` block.
+- **Marine motifs** are restrained "signature accents" only (shelf-hero coral silhouette, tank-view wave divider, header wave-crest `.reef-header::after`, footer tide-line `.reef-footer::before`) — keep them sparse, not immersive.
 
 ## Type hints & style
 

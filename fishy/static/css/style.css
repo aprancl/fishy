@@ -35,7 +35,87 @@
   --reef-radius-sm: 10px;
   --reef-pill: 999px;
   --reef-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* Micro-interaction timing (spec §5.5): one small, tokenized set of
+     durations so hover/focus feedback and entrances feel of a piece. */
+  --reef-dur-fast: 0.15s;   /* hover/focus colour + tint feedback */
+  --reef-dur-base: 0.22s;   /* lifts, slides, shadow changes */
+  --reef-dur-entrance: 0.42s; /* one gentle, non-looping rise on load */
   --reef-focus: #ff8a3d; /* warm, high-visibility keyboard-focus ring */
+
+  /* ======================================================================
+     DESIGN-TOKEN LAYER (UI revamp, spec §5.1 / Recommendation 1)
+
+     A structured system layered ON TOP of the palette above — glass,
+     elevation, motif, and spacing tokens. Everything above stays the single
+     source of truth for the palette; the groups below are the named design
+     decisions the revamp screens reference instead of hard-coding values.
+     Defined here now; applied broadly by later revamp tasks.
+     ====================================================================== */
+
+  /* --- Glass -----------------------------------------------------------
+     Frosted surfaces = backdrop blur + a translucent tinted fill on a
+     hairline light border. Blur tiers scale with a surface's prominence;
+     fill/border opacities keep text on glass legible over the layered base.
+     Reuses the reef-card white so tinted fills stay on-palette. */
+  --glass-blur-sm: 6px;                              /* subtle: pills, chips */
+  --glass-blur-md: 12px;                             /* default: cards, nav */
+  --glass-blur-lg: 20px;                             /* hero / header chrome */
+  --glass-fill-weak: rgba(255, 255, 255, 0.45);      /* light frost */
+  --glass-fill: rgba(255, 255, 255, 0.62);           /* default card frost */
+  --glass-fill-strong: rgba(255, 255, 255, 0.80);    /* legibility backing */
+  --glass-tint-teal: rgba(1, 186, 239, 0.10);        /* cool lagoon wash */
+  --glass-tint-deep: rgba(11, 79, 108, 0.14);        /* deep-ocean wash */
+  --glass-border-color: 255, 255, 255;               /* RGB for hairline edge */
+  --glass-border-opacity: 0.55;
+  --glass-border: 1px solid
+    rgba(var(--glass-border-color), var(--glass-border-opacity));
+
+  /* --- Elevation -------------------------------------------------------
+     Three shadow tiers (rest / hover / lifted) so depth stays consistent.
+     The rest/lifted tiers alias the long-standing --reef-shadow /
+     --reef-shadow-lift values so existing surfaces are unchanged. */
+  --reef-elev-rest: 0 6px 20px rgba(11, 79, 108, 0.12);
+  --reef-elev-hover: 0 10px 26px rgba(11, 79, 108, 0.20);
+  --reef-elev-lifted: 0 14px 32px rgba(11, 79, 108, 0.22);
+
+  /* --- Motif -----------------------------------------------------------
+     Placement + scale knobs for the coral & wave signature accents, so the
+     marine motifs sit consistently across screens. */
+  --motif-wave-height: 16px;         /* header/footer wave-crest band height */
+  --motif-wave-scale: 24px;          /* wave repeat/tile width */
+  --motif-coral-size: 8rem;          /* landing-hero coral flourish size */
+  --motif-coral-inset: 1.25rem;      /* coral offset from its corner */
+  --motif-accent-opacity: 0.9;       /* signature-accent strength (not busy) */
+
+  /* --- Spacing rhythm --------------------------------------------------
+     A consistent modular spacing scale for gaps/padding/margins across the
+     revamp so vertical + horizontal rhythm is uniform. */
+  --reef-space-3xs: 0.25rem;
+  --reef-space-2xs: 0.4rem;
+  --reef-space-xs: 0.6rem;
+  --reef-space-sm: 0.75rem;
+  --reef-space-md: 1rem;
+  --reef-space-lg: 1.5rem;
+  --reef-space-xl: 2rem;
+  --reef-space-2xl: 3rem;
+
+  /* --- Type scale ------------------------------------------------------
+     A modular type scale so headings, chrome and body copy share one
+     consistent hierarchy (spec §5.1). Sizes climb in clear steps; the
+     leading + tracking tokens keep large display text tight and small
+     captions comfortable. Layered on top of the font-family vars above. */
+  --reef-text-xs: 0.78rem;   /* eyebrow labels, fine print */
+  --reef-text-sm: 0.9rem;    /* captions, taglines, table text */
+  --reef-text-base: 1.05rem; /* body copy */
+  --reef-text-lg: 1.2rem;    /* sub-headings, lead-ins */
+  --reef-text-xl: 1.5rem;    /* section titles (h2) */
+  --reef-text-2xl: 1.9rem;   /* page/app title (header) */
+  --reef-text-3xl: 2.4rem;   /* hero display */
+  --reef-leading-tight: 1.15; /* large display headings */
+  --reef-leading-snug: 1.3;   /* multi-line headings */
+  --reef-leading-normal: 1.6; /* body copy */
+  --reef-tracking-tight: -0.01em; /* pull big display text together */
+  --reef-tracking-wide: 0.03em;   /* airy eyebrow/caption spacing */
 }
 
 * { box-sizing: border-box; }
@@ -43,17 +123,26 @@
 body {
   margin: 0;
   font-family: var(--reef-font-body);
-  font-size: 1.02rem;
-  line-height: 1.55;
+  font-size: var(--reef-text-base);
+  line-height: var(--reef-leading-normal);
   color: var(--reef-ink);
+  /* Layered light backdrop (spec §5.0 / §5.1): the warm sand stays home base,
+     but instead of one flat wash it now reads as lit, airy water — a top-down
+     depth gradient, a lagoon key-light and a warm counter-light for dimension,
+     and the drifting bubble motif for subtle texture. Bright + warm, never
+     noisy. Ordered top layer → base fill. */
   background:
-    /* drifting bubble motif — subtle, decorative, never noisy */
+    /* drifting bubble motif — subtle, decorative texture, never noisy */
     radial-gradient(10px 10px at 12% 22%, rgba(1, 186, 239, 0.10), transparent 60%),
     radial-gradient(7px 7px at 82% 14%, rgba(23, 185, 120, 0.10), transparent 60%),
     radial-gradient(14px 14px at 68% 38%, rgba(255, 183, 3, 0.08), transparent 60%),
     radial-gradient(9px 9px at 30% 62%, rgba(255, 107, 94, 0.08), transparent 60%),
-    radial-gradient(1200px 420px at 50% -140px, rgba(1, 186, 239, 0.20), transparent),
-    var(--reef-sand);
+    /* lagoon key-light spilling from the top edge */
+    radial-gradient(1200px 480px at 50% -160px, rgba(1, 186, 239, 0.22), transparent 70%),
+    /* warm sun counter-light rising from the lower right for depth */
+    radial-gradient(900px 560px at 92% 118%, rgba(255, 183, 3, 0.12), transparent 72%),
+    /* soft vertical depth gradient: bright up top, warm sand settling below */
+    linear-gradient(180deg, #ffffff 0%, var(--reef-sand) 44%, #fff2df 100%);
   background-attachment: fixed;
   min-height: 100vh;
   display: flex;
@@ -62,40 +151,71 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Base heading hierarchy from the type scale — display face, tight leading and
+   graded sizes so pages carry a clear visual rhythm. Component classes with an
+   explicit size (e.g. .reef-reference__title) keep their own value. */
 h1, h2, h3, .reef-title { font-family: var(--reef-font-display); }
+h1 {
+  font-size: var(--reef-text-3xl);
+  line-height: var(--reef-leading-tight);
+  letter-spacing: var(--reef-tracking-tight);
+  font-weight: 700;
+}
+h2 {
+  font-size: var(--reef-text-xl);
+  line-height: var(--reef-leading-snug);
+  letter-spacing: var(--reef-tracking-tight);
+  font-weight: 700;
+}
+h3 {
+  font-size: var(--reef-text-lg);
+  line-height: var(--reef-leading-snug);
+  font-weight: 600;
+}
 
 .reef-header {
   background: linear-gradient(120deg, var(--reef-deep), var(--reef-teal));
   color: #fff;
-  box-shadow: var(--reef-shadow);
+  box-shadow: var(--reef-elev-rest);
 }
 
 .reef-header__inner {
-  max-width: 960px;
+  max-width: var(--reef-content-max, 960px);
   margin: 0 auto;
-  padding: 1.1rem 1.25rem;
+  padding: var(--reef-space-lg) var(--reef-space-md);
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  gap: var(--reef-space-md);
 }
 
-.reef-logo { font-size: 2.2rem; line-height: 1; }
-.reef-title { margin: 0; font-size: 1.6rem; letter-spacing: 0.5px; }
-.reef-tagline { margin: 0.15rem 0 0; opacity: 0.9; font-size: 0.95rem; }
+.reef-logo { font-size: 2.4rem; line-height: 1; }
+.reef-title {
+  margin: 0;
+  font-size: var(--reef-text-2xl);
+  line-height: var(--reef-leading-tight);
+  letter-spacing: var(--reef-tracking-tight);
+  font-weight: 700;
+}
+.reef-tagline {
+  margin: var(--reef-space-3xs) 0 0;
+  opacity: 0.92;
+  font-size: var(--reef-text-sm);
+  letter-spacing: var(--reef-tracking-wide);
+}
 
 .reef-main {
   flex: 1;
   width: 100%;
-  max-width: 960px;
+  max-width: var(--reef-content-max, 960px);
   margin: 0 auto;
   padding: 1.5rem 1.25rem;
 }
 
 .reef-card {
   background: var(--reef-card);
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: var(--reef-shadow);
+  border-radius: var(--reef-radius);
+  padding: var(--reef-space-lg);
+  box-shadow: var(--reef-elev-rest);
   border: 1px solid rgba(1, 186, 239, 0.15);
 }
 
@@ -104,10 +224,31 @@ h1, h2, h3, .reef-title { font-family: var(--reef-font-display); }
 
 .reef-footer {
   text-align: center;
-  padding: 1rem;
+  padding: var(--reef-space-lg) var(--reef-space-md);
   color: var(--reef-muted);
-  font-size: 0.85rem;
+  font-size: var(--reef-text-xs);
+  letter-spacing: var(--reef-tracking-wide);
 }
+
+/* --------------------------------------------------------------------------
+   Marine SVG line-art system (spec §5.0 / §5.3 / §9.1)
+   Bespoke thin-stroke glyphs delivered via the `_icons.html` Jinja macro.
+   Every glyph strokes with `currentColor`, so it themes with the palette
+   automatically. Sizing is in `em` (a 1em square) so a glyph scales with its
+   local font-size and never triggers layout shift at small or large sizes.
+   -------------------------------------------------------------------------- */
+.reef-icon {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.14em;   /* seat the glyph on the text baseline */
+  flex: none;                /* never squish inside a flex row */
+  color: inherit;            /* currentColor drives the stroke */
+  overflow: visible;         /* round caps + coral bulbs aren't clipped */
+}
+.reef-icon--sm { font-size: 0.82em; }
+.reef-icon--lg { font-size: 1.5em; }
+.reef-icon--xl { font-size: 2.4em; }
 
 /* --------------------------------------------------------------------------
    Tank shelf (landing) — task #4
@@ -282,7 +423,7 @@ h1, h2, h3, .reef-title { font-family: var(--reef-font-display); }
 .reef-chart {
   width: 100%;
   min-height: 320px;
-  margin-bottom: 1rem;
+  margin-bottom: var(--reef-space-md);
 }
 .reef-chart__empty {
   padding: 2.5rem 0;
@@ -336,11 +477,11 @@ h1, h2, h3, .reef-title { font-family: var(--reef-font-display); }
 }
 
 .reef-add-reading__error {
-  background: rgba(255, 107, 107, 0.12);
+  background: rgba(255, 107, 94, 0.12);
   border: 1px solid var(--reef-coral);
-  color: #8a2b2b;
+  color: var(--reef-coral-ink);
   padding: 0.55rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--reef-radius-sm);
   margin: 0 0 0.85rem;
 }
 
@@ -519,11 +660,11 @@ h1, h2, h3, .reef-title { font-family: var(--reef-font-display); }
 .reef-aggregate__title { margin: 0.5rem 0 1rem; color: var(--reef-deep); }
 .reef-aggregate__panel { margin-top: 1rem; }
 .reef-aggregate__empty {
-  padding: 2rem 1rem;
+  padding: var(--reef-space-xl) var(--reef-space-md);
   text-align: center;
   background: var(--reef-card);
-  border-radius: 12px;
-  box-shadow: var(--reef-shadow);
+  border-radius: var(--reef-radius);
+  box-shadow: var(--reef-elev-rest);
 }
 
 /* (1) Cards row */
@@ -738,12 +879,21 @@ summary:focus-visible,
   margin-top: 1.5rem;
 }
 .reef-footer::before {
-  content: "🐚 🪸 🐠 🌊";
+  /* A tide line replaces the old emoji strip (task #6, spec §5.3): a slim
+     gradient rule that fades to nothing at both ends, echoing a receding tide. */
+  content: "";
   display: block;
-  font-size: 0.9rem;
-  letter-spacing: 0.5rem;
+  width: min(240px, 60%);
+  height: 2px;
+  margin: 0 auto 0.75rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--reef-teal, #01baef),
+    transparent
+  );
   opacity: 0.55;
-  margin-bottom: 0.35rem;
 }
 
 /* --- Cards + tank cards: lift with a warm coral kiss on hover ---------- */
@@ -885,9 +1035,9 @@ summary:focus-visible,
 .reef-chart {
   background: var(--reef-card);
   border-radius: var(--reef-radius);
-  box-shadow: var(--reef-shadow);
+  box-shadow: var(--reef-elev-rest);
   border: 1px solid var(--reef-line);
-  padding: 0.75rem;
+  padding: var(--reef-space-sm);
 }
 
 /* --- Dense aggregate view: keep it airy + legible under the theme ------ */
@@ -932,4 +1082,998 @@ summary:focus-visible,
   .reef-tabs__link:hover,
   .reef-switcher__link:hover,
   .reef-add-reading__save:hover { transform: none; }
+}
+
+/* ==========================================================================
+   GLASS UI SYSTEM (UI revamp, spec §5.2 / §9.2 / Recommendation 2)
+
+   A reusable frosted-glass treatment applied broadly across the surfaces the
+   spec calls out — content cards + hero/empty panels, the primary button,
+   header/nav, parameter tabs and the tank switcher — built entirely from the
+   :root glass tokens established in task #1: a backdrop-filter blur + a
+   translucent tinted fill sitting on a hairline light border.
+
+   Legibility rule (§5.2): body-text surfaces always sit on the *strong* backing
+   fill (--glass-fill-strong ≈ 0.80 white) so copy stays readable over the
+   layered background + marine motifs; short nav labels use the lighter frost.
+   The tint gradient is layered ON TOP of the fill (not replacing it), so the
+   opaque backing is preserved even on the busiest background.
+
+   Robustness (§5.2 / Recommendation 2): the @supports block at the very end
+   swaps every glass surface to a solid/tinted fill wherever backdrop-filter is
+   unsupported — panels then read as intentional solids, never accidentally
+   see-through.
+
+   Additive + non-destructive: reuses the existing class names (no renames),
+   this section is intentionally LAST so it layers cleanly over the functional +
+   theme styling above, and keeps blur radii modest (sm/md/lg = 6/12/20px) to
+   stay GPU-friendly on low-end hardware (§6.1).
+   ========================================================================== */
+
+/* --- Content cards + hero/empty panels: strong frosted backing ----------
+   These carry body copy, so they use the strong (~0.80) fill for legibility.
+   The hairline glass border replaces each surface's prior solid hairline. */
+.reef-card,
+.reef-tank-card,
+.reef-reference__section,
+.reef-aggregate__empty,
+.reef-aggregate-chart,
+.reef-history__scroll,
+.reef-chart {
+  background:
+    linear-gradient(var(--glass-tint-teal), var(--glass-tint-teal)),
+    var(--glass-fill-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  backdrop-filter: blur(var(--glass-blur-md));
+  border: var(--glass-border);
+  box-shadow: var(--reef-elev-rest);
+}
+
+/* Stat tiles get the same frosted fill but keep their teal top-accent hairline
+   (set in the theme section above), so the glass doesn't erase the accent. */
+.reef-stat {
+  background:
+    linear-gradient(var(--glass-tint-teal), var(--glass-tint-teal)),
+    var(--glass-fill-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  backdrop-filter: blur(var(--glass-blur-md));
+}
+
+/* --- Header / nav chrome: a broad glass blur behind the ocean gradient ----
+   The header keeps its opaque gradient + wave motif (owned by the base-chrome
+   pass); here we tokenize the glass treatment — a large-radius backdrop blur
+   and a hairline light under-edge — so the chrome reads as part of the same
+   glass system without disturbing its background. */
+.reef-header {
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+  backdrop-filter: blur(var(--glass-blur-lg));
+  border-bottom: var(--glass-border);
+}
+
+/* --- Nav pills (parameter tabs + tank switcher): lighter frosted glass -----
+   Short labels, so the lighter default frost is enough and looks airy. The
+   active pill keeps its opaque deep gradient (set above) for max contrast. */
+.reef-tabs__link,
+.reef-switcher__link {
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  backdrop-filter: blur(var(--glass-blur-sm));
+  border: var(--glass-border);
+}
+
+/* --- Primary button: tinted deep glass, white text stays legible ----------
+   A translucent deep-ocean fill (kept ≥0.86 opacity so the white label never
+   drops below a comfortable contrast) with a soft blur + hairline edge. */
+.reef-add-reading__save {
+  background:
+    linear-gradient(120deg,
+      rgba(11, 79, 108, 0.94) 0%,
+      rgba(10, 127, 166, 0.90) 55%,
+      rgba(1, 186, 239, 0.86) 100%);
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  backdrop-filter: blur(var(--glass-blur-sm));
+  border: var(--glass-border);
+}
+
+/* --- Fallback: no backdrop-filter → solid/tinted panels -------------------
+   When neither the standard nor the -webkit backdrop-filter is supported, a
+   translucent frost would just look like flat low-opacity panels floating over
+   the busy background, hurting legibility. Swap every glass surface to an
+   opaque tinted solid so the design still reads as intentional and text stays
+   crisp (spec §5.2 fallback requirement). */
+@supports not
+  ((-webkit-backdrop-filter: blur(2px)) or (backdrop-filter: blur(2px))) {
+  .reef-card,
+  .reef-tank-card,
+  .reef-stat,
+  .reef-reference__section,
+  .reef-aggregate__empty,
+  .reef-aggregate-chart,
+  .reef-history__scroll,
+  .reef-chart {
+    background:
+      linear-gradient(var(--glass-tint-teal), var(--glass-tint-teal)),
+      var(--reef-card);
+  }
+  .reef-tabs__link,
+  .reef-switcher__link {
+    background: var(--reef-card);
+  }
+  .reef-add-reading__save {
+    background: var(--reef-grad);
+  }
+}
+
+/* ==========================================================================
+   MARINE MOTIF ACCENTS (UI revamp, spec §5.3 / §9.2)
+
+   "Signature accents, not immersive." A deliberately SMALL set of coral + wave
+   motifs at a few memorable spots — a coral flourish behind the landing hero
+   and a wave-form divider at a section boundary — layered ON TOP of the base
+   chrome (header wave-crest `.reef-header::after`, footer tide-line
+   `.reef-footer::before`) WITHOUT competing with or duplicating them.
+
+   Everything here is decorative: glyphs come from the aria-hidden icon() macro,
+   sit BEHIND or BETWEEN content (never over it), are themed purely from the
+   :root --motif-* tokens + palette, and scale down / soften on narrow screens
+   so they never crowd a small viewport or repeat into visual noise. This
+   section is intentionally LAST so it layers cleanly over everything above.
+   ========================================================================== */
+
+/* --- Landing hero: an oversized coral silhouette drifting behind the shelf --
+   One large-but-whisper-quiet coral, tucked toward the top-right corner and
+   pushed BEHIND the tank cards (z-index 0 vs 1). Sized from --motif-coral-size,
+   offset by --motif-coral-inset, and knocked far down from --motif-accent-
+   opacity so it reads as faint texture, not a foreground graphic. */
+.reef-shelf { position: relative; }
+.reef-shelf > * { position: relative; z-index: 1; }
+.reef-shelf__motif {
+  position: absolute;
+  top: 0;
+  right: var(--motif-coral-inset);
+  z-index: 0;
+  font-size: var(--motif-coral-size);   /* the 1em icon() scales to this */
+  line-height: 0;
+  color: var(--reef-teal);
+  opacity: calc(var(--motif-accent-opacity) * 0.1);
+  pointer-events: none;
+}
+
+/* --- Section divider: a lone wave-form ornament marking a boundary ---------
+   A single centered wave glyph, used at most once per screen to punctuate a
+   section break — echoes the header wave-crest in miniature. Muted teal at a
+   restrained fraction of the accent opacity so it stays a quiet flourish. */
+.reef-wave-divider {
+  margin: 1.25rem 0 1.5rem;
+  text-align: center;
+  line-height: 0;
+  font-size: 2.6rem;                     /* controls the wave glyph size */
+  color: var(--reef-teal);
+  opacity: calc(var(--motif-accent-opacity) * 0.5);
+  pointer-events: none;
+}
+
+/* --- Narrow screens: shrink the hero coral, soften the divider ------------
+   Keep accents from crowding a small viewport (spec §5.3 restraint / §6). */
+@media (max-width: 640px) {
+  .reef-shelf__motif {
+    font-size: calc(var(--motif-coral-size) * 0.65);
+    opacity: calc(var(--motif-accent-opacity) * 0.07);
+  }
+  .reef-wave-divider { font-size: 2rem; }
+}
+
+/* ==========================================================================
+   PARAMETER PAGE COHESION PASS (UI revamp, spec §5.4 — task #9)
+
+   Final tokenized polish across the parameter panel's OWNED seams: breadcrumbs,
+   panel title, stat tiles, add-reading form, logged-readings table, and the
+   reference accordion. Layered LAST so it refines (never rewrites) the
+   functional + glass (#4) + theme (#2) rules above. It deliberately does NOT
+   re-declare the glass backing on .reef-stat / .reef-reference__section /
+   .reef-add-reading__save, does NOT touch the .reef-chart frame or the inline-
+   JSON chart seam, and preserves the in/out-of-range badge glyph+label cue.
+   Everything here is additive spacing/type/radius tokenization + tidy states;
+   zero class/data-* renames. Uses the :root scales (#1/#2) for a cohesive
+   rhythm instead of the earlier hand-picked rem values.
+   ========================================================================== */
+
+/* --- Breadcrumbs: tokenized rhythm + a teal-ink hover ------------------- */
+.reef-crumbs {
+  gap: var(--reef-space-2xs);
+  margin-bottom: var(--reef-space-sm);
+  font-size: var(--reef-text-sm);
+}
+.reef-crumbs a { transition: color 0.15s var(--reef-ease); }
+.reef-crumbs a:hover { color: var(--reef-teal-ink); }
+
+/* --- Panel title: snug hierarchy from the type scale ------------------- */
+.reef-parameter__title {
+  margin-bottom: var(--reef-space-md);
+  line-height: var(--reef-leading-snug);
+}
+
+/* --- Stat tiles: tighter tokenized rhythm; the "latest" tile leads ------
+   Refines radius/padding/type only — the frosted glass backing + teal
+   top-accent hairline (task #4) and the hover lift (theme) are untouched. */
+.reef-stats { margin-bottom: var(--reef-space-md); }
+.reef-stats__grid { gap: var(--reef-space-sm); }
+.reef-stat {
+  border-radius: var(--reef-radius-sm);
+  padding: var(--reef-space-sm);
+  gap: var(--reef-space-3xs);
+}
+.reef-stat__label {
+  font-size: var(--reef-text-xs);
+  letter-spacing: var(--reef-tracking-wide);
+}
+.reef-stat__value {
+  font-size: var(--reef-text-lg);
+  line-height: var(--reef-leading-tight);
+}
+.reef-stat--latest .reef-stat__value { font-size: var(--reef-text-xl); }
+.reef-stat__unit { font-size: var(--reef-text-sm); }
+/* Trend cue: keep the arrow glyph optically aligned with its label. */
+.reef-trend { display: inline-flex; align-items: baseline; gap: 0.3em; }
+
+/* --- No-data / single-reading state: a gentle, intentional inline note ---
+   (parameter-scoped .reef-stats__empty only; shared .reef-empty is task #11's) */
+.reef-stats__empty {
+  padding: var(--reef-space-md) var(--reef-space-sm);
+  border-radius: var(--reef-radius-sm);
+  border: 1px dashed var(--reef-line);
+  font-size: var(--reef-text-sm);
+}
+
+/* --- Add-reading form: tokenized eyebrow labels + softer, roomier inputs -
+   The save button stays exactly as task #4 styled it (deep glass); here we
+   only refine the field labels + text inputs for a cohesive form rhythm. */
+.reef-add-reading__title {
+  margin-bottom: var(--reef-space-sm);
+  font-size: var(--reef-text-lg);
+}
+.reef-add-reading__row { gap: var(--reef-space-md); }
+.reef-field { gap: var(--reef-space-3xs); margin-bottom: var(--reef-space-sm); }
+.reef-field__label {
+  font-size: var(--reef-text-xs);
+  letter-spacing: var(--reef-tracking-wide);
+  text-transform: uppercase;
+  color: var(--reef-muted);
+}
+.reef-field__input {
+  padding: var(--reef-space-2xs) var(--reef-space-xs);
+  border-radius: var(--reef-radius-sm);
+  border-color: var(--reef-line);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* --- Logged readings: micro-label header, hover rows, tidy long tables ---
+   Keeps the table inside its .reef-card (glass) wrapper; long histories read
+   tidily via the uppercase header, hairline row rules and a hover highlight. */
+.reef-readings__title {
+  margin-bottom: var(--reef-space-xs);
+  font-size: var(--reef-text-lg);
+}
+.reef-readings__table { font-size: var(--reef-text-sm); }
+.reef-readings__table th {
+  font-size: var(--reef-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--reef-tracking-wide);
+}
+.reef-readings__table th,
+.reef-readings__table td {
+  padding: var(--reef-space-2xs) var(--reef-space-xs);
+  border-bottom-color: var(--reef-line);
+}
+.reef-readings__table tbody tr { transition: background 0.12s var(--reef-ease); }
+.reef-readings__table tbody tr:hover { background: rgba(1, 186, 239, 0.06); }
+.reef-readings__table tbody tr:last-child td { border-bottom: none; }
+/* Value column reads as data: tabular figures, faintly emphasized. */
+.reef-readings__table td:nth-child(2) {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--reef-deep);
+}
+
+/* --- Reference accordion: tokenized labels + gentle placeholders --------
+   Refines spacing/type/radius only; the frosted section backing (task #4),
+   the open-state shadow + summary hover (theme), and the transparent dashed
+   is-placeholder treatment all stay as-is (higher specificity / glass). */
+.reef-reference {
+  margin-top: var(--reef-space-lg);
+  padding-top: var(--reef-space-md);
+}
+.reef-reference__head { margin-bottom: var(--reef-space-sm); }
+.reef-reference__title { font-size: var(--reef-text-lg); }
+.reef-reference__lede { font-size: var(--reef-text-sm); }
+.reef-reference__sections { gap: var(--reef-space-2xs); }
+.reef-reference__section {
+  border-radius: var(--reef-radius-sm);
+  padding: 0 var(--reef-space-sm);
+}
+.reef-reference__label {
+  padding: var(--reef-space-xs) 0;
+  gap: var(--reef-space-2xs);
+}
+.reef-reference__body { line-height: var(--reef-leading-normal); }
+.reef-reference__placeholder { font-size: var(--reef-text-sm); }
+
+/* ==========================================================================
+   GLOBAL CHROME REVAMP (UI revamp, spec §5.4 — task #7)
+
+   A cohesive polish pass over the persistent chrome — header, tank switcher,
+   parameter tabs, footer — layered ON TOP of the glass system (task #4) and
+   the theme motifs. The header wave-crest (`.reef-header::after`) and footer
+   tide-line (`.reef-footer::before`) are preserved untouched; this section
+   refines the *hierarchy* around them (a frosted logo badge, micro-labels,
+   consistent pill active/hover states). Reuses every existing class + state
+   hook (`.is-active` / `aria-current` styling), no renames. Appended LAST so
+   these refinements win the cascade at equal specificity.
+   ========================================================================== */
+
+/* --- Header: seat the logo in a frosted badge, sharpen the title block ----
+   The bare glyph now sits in a circular frosted-glass badge, giving the
+   masthead a clear focal anchor and echoing the glass nav pills. The tagline
+   drops to a spaced micro-label so the title reads as the dominant line. */
+.reef-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.85rem;
+  border-radius: var(--reef-pill);
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  backdrop-filter: blur(var(--glass-blur-sm));
+  border: var(--glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35),
+              0 3px 10px rgba(0, 0, 0, 0.2);
+}
+.reef-tagline {
+  margin-top: var(--reef-space-3xs);
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: var(--reef-text-xs);
+  letter-spacing: var(--reef-tracking-wide);
+  opacity: 0.82;
+}
+
+/* --- Switcher: a spaced micro-label + a tidy, wrap-or-scroll pill row ------
+   The "Tank:" label becomes a quiet uppercase eyebrow so the pills carry the
+   visual weight. The list wraps by default and, if a great many tanks push it
+   past one line's worth of room on a narrow screen, the row can scroll
+   horizontally as a graceful fallback rather than overflowing. */
+.reef-switcher__label {
+  text-transform: uppercase;
+  letter-spacing: var(--reef-tracking-wide);
+  font-size: var(--reef-text-xs);
+}
+.reef-switcher__list {
+  flex-wrap: wrap;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.reef-switcher__home {
+  font-size: var(--reef-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--reef-tracking-wide);
+  font-weight: 600;
+  color: var(--reef-teal-ink);
+  transition: color 0.15s var(--reef-ease);
+}
+.reef-switcher__home:hover,
+.reef-switcher__home:focus-visible { color: var(--reef-deep); }
+
+/* --- Pills (switcher + tabs): one consistent active/hover language ---------
+   Both nav families share the same tokenized active pill (deep→teal grad with
+   a lifted shadow) and the same springy hover, so switching context feels
+   identical everywhere. The active pill also gets a soft warm underline accent
+   echoing the section-heading flourish, strengthening "you are here". */
+.reef-switcher__link.is-active,
+.reef-tabs__link.is-active {
+  background: var(--reef-grad);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(11, 79, 108, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.reef-tabs__link.is-active {
+  position: relative;
+}
+.reef-tabs__link.is-active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -0.32rem;
+  width: 1.6rem;
+  height: 3px;
+  transform: translateX(-50%);
+  border-radius: var(--reef-pill);
+  background: var(--reef-grad-warm);
+}
+
+/* --- Footer: a calmer, more deliberate tide-line + micro-copy -------------
+   Keeps the `.reef-footer::before` tide-line motif; nudges the copy to a
+   quiet, evenly spaced micro-label so the footer reads as an intentional
+   close rather than leftover text. */
+.reef-footer p {
+  margin: 0;
+  max-width: 640px;
+  margin-inline: auto;
+  line-height: var(--reef-leading-normal);
+}
+
+/* --- Narrow screens: shrink the logo badge, keep the pill rows usable ------ */
+@media (max-width: 640px) {
+  .reef-logo {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.5rem;
+  }
+}
+
+/* ==========================================================================
+   AGGREGATE VIEW REVAMP (UI revamp, spec §5.4 — task #10)
+
+   Token-aligned polish for the aggregate screen so its three regions — the
+   cards row, the overlay chart frame, and the history table — read as the same
+   considered surface as the parameter page. Additive + LAST-in-cascade: reuses
+   the existing seams (`.reef-aggregate*`, `.reef-history*`, `.reef-stat`,
+   `.reef-badge`, `.reef-trend`) with NO renames, and only refines spacing,
+   type, radius, and elevation via the §5.1 tokens. The glass fills/borders on
+   `.reef-aggregate-chart` + `.reef-history__scroll` (task #4) and the Plotly
+   internals (task #12) are left untouched. The out-of-range colour + non-colour
+   (coral outline/tint + warning-glyph badge) cues are preserved throughout.
+   ========================================================================== */
+
+/* --- (1) Cards row: rhythm + type that echoes the parameter stat tiles ---- */
+.reef-aggregate__cards { margin-bottom: var(--reef-space-lg); }
+.reef-aggregate__cards-grid { gap: var(--reef-space-sm); }
+.reef-aggregate-card__name {
+  font-size: var(--reef-text-xs);
+  letter-spacing: var(--reef-tracking-wide);
+  line-height: var(--reef-leading-snug);
+}
+.reef-aggregate-card__meta {
+  gap: var(--reef-space-2xs);
+  margin-top: var(--reef-space-3xs);
+}
+.reef-aggregate-card__nodata { font-size: var(--reef-text-sm); }
+
+/* --- (2) Overlay chart: title/note hierarchy + radius matching the chart --- */
+.reef-aggregate__overlay { margin-bottom: var(--reef-space-lg); }
+.reef-aggregate__overlay-title {
+  margin: 0 0 var(--reef-space-3xs);
+  font-family: var(--reef-font-display);
+  font-size: var(--reef-text-lg);
+  line-height: var(--reef-leading-snug);
+}
+.reef-aggregate__overlay-note {
+  margin: 0 0 var(--reef-space-sm);
+  font-size: var(--reef-text-sm);
+  line-height: var(--reef-leading-normal);
+}
+/* Radius/padding only — the glass fill + border + shadow stay owned by #4. */
+.reef-aggregate-chart {
+  border-radius: var(--reef-radius);
+  padding: var(--reef-space-sm);
+}
+
+/* --- (3) History table: same frame radius + tidy, legible density -------- */
+.reef-aggregate__history { margin-top: var(--reef-space-lg); }
+.reef-history__title {
+  margin: 0 0 var(--reef-space-3xs);
+  font-family: var(--reef-font-display);
+  font-size: var(--reef-text-lg);
+  line-height: var(--reef-leading-snug);
+}
+.reef-history__note {
+  margin: 0 0 var(--reef-space-sm);
+  font-size: var(--reef-text-sm);
+  line-height: var(--reef-leading-normal);
+}
+/* Radius only — glass backing owned by #4; keeps sticky-header scroll intact. */
+.reef-history__scroll { border-radius: var(--reef-radius); }
+.reef-history__table { font-size: var(--reef-text-sm); }
+.reef-history__table th,
+.reef-history__table td { padding: var(--reef-space-2xs) var(--reef-space-sm); }
+/* Sticky header sits above scrolled rows and echoes the eyebrow-label style. */
+.reef-history__table th {
+  font-size: var(--reef-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--reef-tracking-wide);
+  z-index: 1;
+}
+.reef-history__archived {
+  border-radius: var(--reef-pill);
+  letter-spacing: var(--reef-tracking-wide);
+}
+
+/* ==========================================================================
+   EMPTY / EDGE STATES + MALFORMED-CSV NOTICE (UI revamp, spec §5.4 — task #11)
+
+   Restyles the shared empty markers (.reef-empty / --inline), the shelf
+   config code block (.reef-code), and the non-fatal malformed-CSV banner
+   (.reef-notice / --warn) on-theme: friendly, glassy, and motif-accented
+   rather than plain. Purely additive + intentionally LAST so it layers over
+   the glass system + cohesive theme above at equal specificity without
+   renaming any class hook the tests assert. Class hooks preserved verbatim:
+   .reef-empty, .reef-empty--inline, .reef-notice, .reef-notice--warn,
+   .reef-notice__lead/__icon/__list/__hint, .reef-code.
+   ========================================================================== */
+
+/* --- Shared empty marker: quiet base every empty state carries ------------- */
+.reef-empty {
+  position: relative;
+  overflow: hidden;
+  color: var(--reef-muted);
+}
+
+/* --- Boxed empty state (shelf "no tanks configured"): a warm invitation -----
+   Sits on .reef-card, so it already carries the frosted-glass backing from the
+   glass system above; here we center the copy, lift the icon into a friendly
+   tinted medallion, and run a coral->teal signature hairline across the top so
+   the panel reads as an intentional welcome, never a blank dead-end. */
+.reef-card.reef-empty {
+  text-align: center;
+  padding: var(--reef-space-xl) var(--reef-space-lg);
+}
+.reef-card.reef-empty::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--reef-grad);
+  opacity: 0.85;
+}
+.reef-empty h3 {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--reef-space-2xs);
+  margin-top: 0;
+  color: var(--reef-deep);
+  font-family: var(--reef-font-display);
+}
+/* the aria-hidden icon wrapper -> a soft glass medallion behind the glyph */
+.reef-card.reef-empty h3 span[aria-hidden] {
+  display: inline-grid;
+  place-items: center;
+  width: 2.4em;
+  height: 2.4em;
+  border-radius: 50%;
+  color: var(--reef-teal-ink);
+  background:
+    linear-gradient(var(--glass-tint-teal), var(--glass-tint-teal)),
+    var(--glass-fill);
+  border: var(--glass-border);
+  box-shadow: var(--reef-elev-rest);
+}
+.reef-card.reef-empty h3 span[aria-hidden] .reef-icon {
+  width: 1.25em;
+  height: 1.25em;
+}
+.reef-empty p { line-height: var(--reef-leading-normal); }
+
+/* --- Inline empty state (in-panel "no data yet" prompts) -------------------
+   The lighter variant used inside stat/history panels + the tank view: a slim
+   teal-accented glass sliver so the prompt feels like a gentle nudge, not a
+   plain gray line. Works for both the <p> and <div> markup that carry it. */
+.reef-empty--inline {
+  overflow: visible;
+  margin: var(--reef-space-sm) 0;
+  padding: var(--reef-space-xs) var(--reef-space-md);
+  border-left: 3px solid var(--reef-teal);
+  border-radius: 0 var(--reef-radius-sm) var(--reef-radius-sm) 0;
+  background:
+    linear-gradient(var(--glass-tint-teal), var(--glass-tint-teal)),
+    var(--glass-fill-weak);
+  color: var(--reef-muted);
+  font-size: var(--reef-text-sm);
+  line-height: var(--reef-leading-normal);
+}
+/* an inline variant never wears the boxed centering/accent bar */
+.reef-card.reef-empty--inline { text-align: left; }
+
+/* --- Config code block (shelf empty-state snippet): on-theme, centered card -
+   Give the TOML sample a deep-ocean frosted panel and re-assert left-aligned
+   text (the boxed empty centers its content) so it reads as a tidy sample. */
+.reef-code {
+  margin: var(--reef-space-sm) auto;
+  max-width: 22rem;
+  padding: var(--reef-space-sm) var(--reef-space-md);
+  border-radius: var(--reef-radius-sm);
+  border: var(--glass-border);
+  background:
+    linear-gradient(var(--glass-tint-deep), var(--glass-tint-deep)),
+    var(--glass-fill-strong);
+  text-align: left;
+  overflow-x: auto;
+  font-size: var(--reef-text-sm);
+  color: var(--reef-deep);
+}
+
+/* --- Malformed-CSV notice: a friendly, glassy, warm-accented banner --------
+   Non-fatal - the valid readings still render below, so this stays a calm
+   heads-up, not an alarm. Frosted-glass backing + a warm sun->coral tint wash
+   + a coral spine keep it on-theme and clearly distinct from the empty states,
+   while the row list is capped + scrollable so a long batch of skipped rows
+   stays readable instead of pushing the good data far down the page. */
+.reef-notice {
+  position: relative;
+  margin: 0 0 var(--reef-space-lg);
+  padding: var(--reef-space-md) var(--reef-space-lg);
+  border-radius: var(--reef-radius-sm);
+  border: var(--glass-border);
+  box-shadow: var(--reef-elev-rest);
+  color: var(--reef-ink);
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  backdrop-filter: blur(var(--glass-blur-md));
+  background:
+    linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0)),
+    var(--glass-fill-strong);
+}
+.reef-notice--warn {
+  border-left: 5px solid var(--reef-coral);
+  background:
+    linear-gradient(180deg, rgba(255, 183, 3, 0.14), rgba(255, 107, 94, 0.10)),
+    var(--glass-fill-strong);
+}
+.reef-notice__lead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--reef-space-2xs);
+  margin: 0 0 var(--reef-space-xs);
+  font-size: var(--reef-text-base);
+  line-height: var(--reef-leading-snug);
+}
+.reef-notice__icon {
+  display: inline-grid;
+  place-items: center;
+  margin-right: var(--reef-space-3xs);
+  color: var(--reef-coral-ink);
+}
+.reef-notice__icon .reef-icon { width: 1.3em; height: 1.3em; }
+.reef-notice__list {
+  margin: var(--reef-space-2xs) 0;
+  padding-left: var(--reef-space-lg);
+  font-size: var(--reef-text-sm);
+  line-height: var(--reef-leading-normal);
+  /* long skipped-row batches: cap height + scroll so the good data below the
+     notice stays close to the top of the page and the list stays readable. */
+  max-height: 12rem;
+  overflow-y: auto;
+}
+.reef-notice__list li { margin: var(--reef-space-3xs) 0; }
+.reef-notice__hint {
+  margin: var(--reef-space-xs) 0 0;
+  font-size: var(--reef-text-xs);
+}
+
+/* --- Fallback: no backdrop-filter -> solid tinted notice (matches §5.2) ---- */
+@supports not
+  ((-webkit-backdrop-filter: blur(2px)) or (backdrop-filter: blur(2px))) {
+  .reef-notice {
+    background:
+      linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0)),
+      var(--reef-card);
+  }
+  .reef-notice--warn {
+    background:
+      linear-gradient(180deg, rgba(255, 183, 3, 0.16), rgba(255, 107, 94, 0.12)),
+      var(--reef-card);
+  }
+}
+
+/* ==========================================================================
+   TANK SHELF LANDING — HERO + GLASS CARDS (UI revamp, spec §5.4, task #8)
+
+   The landing is the first-impression screen, so it earns a proper hero band
+   and elevated glass tank cards. Everything here layers ON TOP of the base
+   shelf rules (~L250), the glass system (which already frosts .reef-tank-card),
+   and the coral motif silhouette (~L1223) — it only refines hierarchy, spacing,
+   elevation and hover micro-interactions using the shared tokens
+   (--reef-space-*, --reef-text-*, --reef-elev-*, --glass-*, palette). Additive
+   and LAST so it wins at equal specificity; no class/link renames. Shared
+   .reef-empty / .reef-notice styling is intentionally left to task #11.
+   ========================================================================== */
+
+/* --- Hero band: coral eyebrow -> oversized title -> lead ------------------ */
+.reef-shelf__hero {
+  margin: 0 0 var(--reef-space-xl);
+  max-width: 46rem;
+}
+.reef-shelf__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--reef-space-3xs);
+  margin: 0 0 var(--reef-space-2xs);
+  font-family: var(--reef-font-display);
+  font-size: var(--reef-text-xs);
+  font-weight: 700;
+  letter-spacing: var(--reef-tracking-wide);
+  text-transform: uppercase;
+  color: var(--reef-coral);
+}
+.reef-shelf__eyebrow-mark {
+  display: inline-flex;
+  line-height: 0;
+  font-size: 1.05em; /* nudge the coral glyph to optically match the caps */
+}
+.reef-shelf__hero .reef-shelf__title {
+  font-size: var(--reef-text-3xl);
+  line-height: var(--reef-leading-tight);
+  letter-spacing: var(--reef-tracking-tight);
+}
+.reef-shelf__hero .reef-shelf__lead {
+  margin: var(--reef-space-2xs) 0 0;
+  font-size: var(--reef-text-lg);
+  line-height: var(--reef-leading-normal);
+  max-width: 42rem;
+}
+
+/* --- Glass tank cards: refined elevation + hover micro-interaction --------
+   The glass fill + hairline come from the glass system; here we lift the rest
+   elevation to the tokenized tier, add a coral signature accent bar that grows
+   on hover, and layer an "Open >" cue that slides in. Hover transforms and the
+   coral sheen (::after, theme block) stay; we only strengthen the lift. */
+.reef-tank-card {
+  padding: var(--reef-space-lg);
+  border-radius: var(--reef-radius);
+  box-shadow: var(--reef-elev-rest);
+  transition: transform 0.18s var(--reef-ease),
+    box-shadow 0.18s var(--reef-ease), border-color 0.18s var(--reef-ease);
+}
+/* Coral signature accent: a thin left edge-bar (drawn over the glass, under
+   the sweeping ::after sheen) that saturates + widens on hover. */
+.reef-tank-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--reef-grad-warm);
+  opacity: 0.55;
+  transition: width 0.18s var(--reef-ease), opacity 0.18s var(--reef-ease);
+  z-index: 1;
+}
+.reef-tank-card:hover,
+.reef-tank-card:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: var(--reef-elev-lifted);
+}
+.reef-tank-card:hover::before,
+.reef-tank-card:focus-visible::before {
+  width: 6px;
+  opacity: 1;
+}
+/* keep the card's own text above both the accent bar and the ::after sheen */
+.reef-tank-card__icon,
+.reef-tank-card__label,
+.reef-tank-card__id,
+.reef-tank-card__cue { position: relative; z-index: 2; }
+
+.reef-tank-card__icon {
+  color: var(--reef-teal);
+  font-size: var(--reef-text-2xl);
+}
+.reef-tank-card__label {
+  font-family: var(--reef-font-display);
+  font-size: var(--reef-text-lg);
+}
+
+/* "Open >" affordance: muted until hover, then colors up and the chevron
+   nudges right — a small, tasteful micro-interaction (spec §5.5 hooks). */
+.reef-tank-card__cue {
+  margin-top: var(--reef-space-2xs);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--reef-space-3xs);
+  font-size: var(--reef-text-sm);
+  font-weight: 700;
+  letter-spacing: var(--reef-tracking-wide);
+  text-transform: uppercase;
+  color: var(--reef-muted);
+  transition: color 0.18s var(--reef-ease);
+}
+.reef-tank-card__chevron {
+  font-size: 1.1em;
+  transition: transform 0.18s var(--reef-ease);
+}
+.reef-tank-card:hover .reef-tank-card__cue,
+.reef-tank-card:focus-visible .reef-tank-card__cue { color: var(--reef-coral-ink); }
+.reef-tank-card:hover .reef-tank-card__chevron,
+.reef-tank-card:focus-visible .reef-tank-card__chevron { transform: translateX(3px); }
+
+/* --- Grid: a touch more breathing room between cards --------------------- */
+.reef-shelf__grid { gap: var(--reef-space-md); }
+
+/* --- Narrow screens: relax the hero, keep the grid collapsing cleanly ----- */
+@media (max-width: 640px) {
+  .reef-shelf__hero { margin-bottom: var(--reef-space-lg); }
+  .reef-shelf__hero .reef-shelf__title { font-size: var(--reef-text-2xl); }
+  .reef-shelf__hero .reef-shelf__lead { font-size: var(--reef-text-base); }
+  .reef-tank-card { padding: var(--reef-space-md); }
+}
+
+/* --- Reduced motion: freeze the card lift, accent bar + chevron slide ----- */
+@media (prefers-reduced-motion: reduce) {
+  .reef-tank-card:hover,
+  .reef-tank-card:focus-visible,
+  .reef-tank-card:hover .reef-tank-card__chevron,
+  .reef-tank-card:focus-visible .reef-tank-card__chevron { transform: none; }
+}
+
+/* ==========================================================================
+   TASTEFUL MICRO-INTERACTIONS (UI revamp, spec §5.5 / Recommendation)
+
+   A thin, unifying polish layer over the hover/transition details already
+   spread across the feature + cohesive-theme sections above. Goals, kept
+   deliberately restrained:
+     1. Tokenized timing — everything here uses --reef-dur-fast/base/entrance
+        with the shared --reef-ease, so feedback feels consistent, not ad-hoc.
+     2. Keyboard parity — every interactive surface that lifts/tints on :hover
+        gets the SAME treatment on :focus-visible (on top of the global focus
+        ring), so keyboard users get identical affordances.
+     3. A single, brief, NON-LOOPING entrance — key surfaces gently rise+fade
+        in once on load. No ambient/looping/background animation anywhere.
+   Placed last so it wins the cascade at equal specificity without rewriting
+   earlier rules. Fully neutralised under prefers-reduced-motion (block below).
+   ========================================================================== */
+
+/* --- Keyboard parity: mirror hover affordances on :focus-visible ---------- */
+/* Nav pills already lift on :hover; give focused pills the same lift + glow. */
+.reef-tabs__link:focus-visible,
+.reef-switcher__link:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(1, 186, 239, 0.22);
+}
+/* The reference accordion summary is focusable (<summary>): match its hover. */
+.reef-reference__label:focus-visible { color: var(--reef-teal-ink); }
+
+/* --- Retune existing feedback onto the shared duration tokens ------------- */
+/* Same motion, now tokenized so hover/focus timing is uniform app-wide. */
+.reef-tabs__link,
+.reef-switcher__link {
+  transition: background var(--reef-dur-fast) var(--reef-ease),
+    color var(--reef-dur-fast) var(--reef-ease),
+    transform var(--reef-dur-base) var(--reef-ease),
+    box-shadow var(--reef-dur-base) var(--reef-ease);
+}
+.reef-add-reading__save {
+  transition: transform var(--reef-dur-base) var(--reef-ease),
+    filter var(--reef-dur-fast) var(--reef-ease),
+    box-shadow var(--reef-dur-base) var(--reef-ease);
+}
+.reef-stat {
+  transition: transform var(--reef-dur-base) var(--reef-ease),
+    box-shadow var(--reef-dur-base) var(--reef-ease);
+}
+.reef-reference__section { transition: box-shadow var(--reef-dur-base) var(--reef-ease); }
+.reef-reference__label { transition: color var(--reef-dur-fast) var(--reef-ease); }
+.reef-history__table tbody tr,
+.reef-readings__table tbody tr { transition: background var(--reef-dur-fast) var(--reef-ease); }
+.reef-tank-card {
+  transition: transform var(--reef-dur-base) var(--reef-ease),
+    box-shadow var(--reef-dur-base) var(--reef-ease),
+    border-color var(--reef-dur-base) var(--reef-ease);
+}
+.reef-tank-card::before {
+  transition: width var(--reef-dur-base) var(--reef-ease),
+    opacity var(--reef-dur-base) var(--reef-ease);
+}
+.reef-tank-card__cue { transition: color var(--reef-dur-base) var(--reef-ease); }
+.reef-tank-card__chevron { transition: transform var(--reef-dur-base) var(--reef-ease); }
+
+/* --- Single, brief, non-looping entrance -------------------------------- */
+/* Key surfaces rise a few px + fade in once on load. Transform+opacity only
+   (compositor-friendly, no reflow → no layout shift), forwards fill so nothing
+   snaps back. iteration-count is the default (1): this NEVER loops. */
+@keyframes reef-rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reef-card,
+.reef-tank-card,
+.reef-shelf__hero,
+.reef-chart,
+.reef-aggregate-chart {
+  animation: reef-rise-in var(--reef-dur-entrance) var(--reef-ease) both;
+}
+
+/* --- Reduced motion: strip every transform + the entrance entirely -------- */
+/* Belt-and-suspenders on top of the global reduce block: kill the new
+   focus/hover transforms and the entrance animation so the layout is fully
+   static (final resting state) with zero shift when motion is disabled. */
+@media (prefers-reduced-motion: reduce) {
+  .reef-tabs__link:focus-visible,
+  .reef-switcher__link:focus-visible { transform: none; }
+  .reef-card,
+  .reef-tank-card,
+  .reef-shelf__hero,
+  .reef-chart,
+  .reef-aggregate-chart {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   BANNER + BACKDROP + LAYOUT OVERHAUL (revision pass)
+
+   Owner feedback: (1) the header's scalloped semicircle crest looked cheap;
+   (2) the light background read as barren/empty; (3) the app felt cramped in a
+   narrow centred column. This section — appended LAST so it wins the cascade at
+   equal specificity — reworks all three WITHOUT touching any class/id/data-*
+   or the `.reef-header::after` / `.reef-footer::before` selectors the theme
+   tests assert (their rules are kept; only their paint is restyled).
+   ========================================================================== */
+
+/* --- Layout: let the app fill the page (was a 960px column) ---------------- */
+body { --reef-content-max: min(1480px, 93vw); }
+.reef-main { padding: var(--reef-space-xl) var(--reef-space-lg); }
+/* Slightly larger, better-proportioned tank cards now that rows are wider. */
+.reef-shelf__grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+
+/* --- Background: a lit, layered lagoon instead of barren white ------------- */
+body {
+  background:
+    radial-gradient(1100px 520px at 50% -180px, rgba(1, 186, 239, 0.30), transparent 70%),
+    radial-gradient(780px 640px at 6% 6%, rgba(23, 185, 120, 0.14), transparent 68%),
+    radial-gradient(900px 700px at 98% 42%, rgba(255, 107, 94, 0.10), transparent 70%),
+    radial-gradient(940px 660px at 86% 118%, rgba(255, 183, 3, 0.16), transparent 72%),
+    linear-gradient(180deg, #eef9ff 0%, var(--reef-sand) 42%, #ffedd6 100%);
+  background-attachment: fixed;
+}
+/* A soft, fixed "reef floor" of layered waves anchored to the bottom of the
+   viewport — fills the lower page with gentle depth, sits behind all content. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 340' preserveAspectRatio='none'><path fill='%2301baef' fill-opacity='0.10' d='M0,170 C240,240 480,110 720,150 C960,190 1200,272 1440,190 L1440,340 L0,340 Z'/><path fill='%2317b978' fill-opacity='0.08' d='M0,244 C260,202 520,300 760,256 C1000,212 1220,270 1440,236 L1440,340 L0,340 Z'/><path fill='%230b4f6c' fill-opacity='0.06' d='M0,300 C300,270 560,318 820,296 C1080,274 1240,306 1440,290 L1440,340 L0,340 Z'/></svg>")
+      center bottom / 100% 44vh no-repeat;
+}
+
+/* --- Banner: taller, more dimensional ocean + a smooth cresting wave ------- */
+.reef-header {
+  background:
+    radial-gradient(720px 260px at 82% -70px, rgba(255, 183, 3, 0.30), transparent 70%),
+    radial-gradient(620px 320px at 10% 128%, rgba(1, 186, 239, 0.45), transparent 72%),
+    linear-gradient(120deg, #062b3e 0%, var(--reef-deep) 32%, #0a7fa6 68%, var(--reef-teal) 100%);
+}
+.reef-header__inner {
+  /* taller masthead, with extra bottom room so content clears the wave */
+  padding: var(--reef-space-xl) var(--reef-space-md) calc(var(--reef-space-xl) + 22px);
+}
+/* Replace the scalloped semicircle crest with a single smooth wave (sand,
+   in front) layered over a translucent teal wave (behind) for depth. */
+.reef-header::after {
+  height: 54px;
+  opacity: 1;
+  background:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 54' preserveAspectRatio='none'><path d='M0,30 C220,54 470,10 720,27 C980,45 1200,56 1440,26 L1440,54 L0,54 Z' fill='%23fff8ef'/></svg>")
+      center bottom / 100% 54px no-repeat,
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 54' preserveAspectRatio='none'><path d='M0,38 C260,20 520,52 760,39 C1020,26 1230,46 1440,34 L1440,54 L0,54 Z' fill='%2301baef' fill-opacity='0.32'/></svg>")
+      center bottom / 100% 54px no-repeat;
+}
+/* Give the masthead type a touch more presence against the richer gradient. */
+.reef-title { font-size: var(--reef-text-3xl); }
+
+/* --- Narrow widths: keep the wave + spacing sensible ---------------------- */
+@media (max-width: 640px) {
+  .reef-main { padding: var(--reef-space-lg) var(--reef-space-md); }
+  .reef-header__inner { padding: var(--reef-space-lg) var(--reef-space-md) calc(var(--reef-space-lg) + 16px); }
+  .reef-header::after { height: 34px; background-size: 100% 34px, 100% 34px; }
+  body::before { background-size: 100% 34vh; }
+  .reef-title { font-size: var(--reef-text-2xl); }
 }
