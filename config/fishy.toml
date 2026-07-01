@@ -1,0 +1,97 @@
+# fishy configuration — tanks, parameters, target ranges (spec §7.4 / §5.5-5.6)
+#
+# This file is plain-text and hand-editable. Adding a tank or a parameter here
+# surfaces it in the app with no code changes. Reference/action-guide text for
+# each parameter lives in the sibling `content/<parameter-id>.md` files, which
+# you can freely edit or override.
+#
+# Format: TOML (parsed with Python's standard-library `tomllib` — zero extra
+# dependencies).
+
+
+# --------------------------------------------------------------------------- #
+# Tanks — each has a stable `id` (used as the CSV `tank` key) and a `label`.
+# --------------------------------------------------------------------------- #
+[[tanks]]
+id = "reef-a"
+label = "Reef A"
+
+[[tanks]]
+id = "frag-tank"
+label = "Frag Tank"
+
+
+# --------------------------------------------------------------------------- #
+# Parameters — the built-in reef set. Each declares:
+#   id            stable key (matches the CSV `parameter` column & content file)
+#   display_name  human label shown in the UI
+#   units         accepted units; the first is the canonical/stored unit
+#   target_range  default ideal band ({ min, max }); either bound is optional
+# Add your own custom parameter by copying a block and changing the values;
+# a fillable content template is provided at content/_template.md.
+# --------------------------------------------------------------------------- #
+[[parameters]]
+id = "salinity"
+display_name = "Salinity / Specific Gravity"
+units = ["sg", "ppt"]
+builtin = true
+target_range = { min = 1.024, max = 1.026 }
+
+[[parameters]]
+id = "alkalinity"
+display_name = "Alkalinity"
+units = ["dKH"]
+builtin = true
+target_range = { min = 8.0, max = 9.0 }
+
+[[parameters]]
+id = "calcium"
+display_name = "Calcium"
+units = ["ppm"]
+builtin = true
+target_range = { min = 400, max = 450 }
+
+[[parameters]]
+id = "magnesium"
+display_name = "Magnesium"
+units = ["ppm"]
+builtin = true
+target_range = { min = 1250, max = 1350 }
+
+[[parameters]]
+id = "phosphate"
+display_name = "Phosphate"
+units = ["ppm"]
+builtin = true
+target_range = { min = 0.03, max = 0.10 }
+
+# Example CUSTOM parameter (not part of the built-in reef set). This block is
+# here to demonstrate that adding a parameter in config surfaces it in the app —
+# a tab with chart, stats and an add-reading form — with no code change. It also
+# shows two optional features:
+#   * multiple units: the FIRST entry ("°C") is canonical and every stored value
+#     is recorded in it (there is no automatic conversion — see README "Units").
+#   * NO target_range: a parameter may omit a band entirely, in which case the
+#     chart plots the data with no shaded region and never flags a reading as
+#     out-of-range. Delete this block (and any logged temperature readings) if
+#     you don't track temperature.
+[[parameters]]
+id = "temperature"
+display_name = "Temperature"
+units = ["°C", "°F"]
+
+
+# --------------------------------------------------------------------------- #
+# Per-tank range overrides (optional). A tank without an override falls back to
+# the parameter default above. The resolved range (per-tank override → else the
+# parameter default) drives BOTH the chart's shaded band and out-of-range
+# highlighting for that tank (spec §5.5).
+#
+# Live example — the Frag Tank runs a tighter alkalinity band than Reef A, which
+# keeps the parameter default (8.0–9.0). Add or remove blocks freely; a
+# `[overrides.<tank-id>.<parameter-id>]` table with `min`/`max` (either bound
+# optional) is all that's needed.
+# --------------------------------------------------------------------------- #
+[overrides.frag-tank.alkalinity]
+min = 8.2
+max = 8.8

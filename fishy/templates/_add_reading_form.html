@@ -1,0 +1,57 @@
+{#
+  Reusable per-parameter add-reading form (spec §5.2).
+
+  Scoped to a SINGLE parameter — this is not a multi-parameter grid, so logging
+  one parameter never requires entering any others (partial logging is
+  first-class). Embed from anywhere that has `active_tank`, `parameter` and
+  `today` in scope, e.g. task #6's parameter tab shell:
+
+      {% include "_add_reading_form.html" %}
+
+  Optional context it reads:
+    * error — friendly validation message to show (re-render after a bad POST)
+    * form  — the previously submitted {value, date, note} to repopulate fields
+    * today — ISO date string used as the editable default (auto-captured now)
+#}
+<form class="reef-add-reading"
+      method="post"
+      action="{{ url_for('add_reading', tank_id=active_tank.id, param_id=parameter.id) }}"
+      aria-label="Add {{ parameter.display_name }} reading for {{ active_tank.label }}">
+  <h3 class="reef-add-reading__title">
+    Add {{ parameter.display_name }} reading
+  </h3>
+
+  {% if error %}
+  <p class="reef-add-reading__error" role="alert">
+    <span aria-hidden="true">⚠️</span> {{ error }}
+  </p>
+  {% endif %}
+
+  <div class="reef-add-reading__row">
+    <label class="reef-field">
+      <span class="reef-field__label">
+        Value{% if parameter.default_unit %} <span class="reef-muted">({{ parameter.default_unit }})</span>{% endif %}
+      </span>
+      <input class="reef-field__input"
+             type="text" inputmode="decimal" name="value"
+             value="{{ form.value | default('', true) }}"
+             required aria-required="true"
+             placeholder="e.g. 8.2">
+    </label>
+
+    <label class="reef-field">
+      <span class="reef-field__label">Date</span>
+      <input class="reef-field__input"
+             type="date" name="date"
+             value="{{ form.date | default(today, true) }}">
+    </label>
+  </div>
+
+  <label class="reef-field">
+    <span class="reef-field__label">Note <span class="reef-muted">(optional)</span></span>
+    <textarea class="reef-field__input" name="note" rows="2"
+              placeholder="Anything worth remembering about this reading…">{{ form.note | default('', true) }}</textarea>
+  </label>
+
+  <button class="reef-add-reading__save" type="submit">Save reading</button>
+</form>

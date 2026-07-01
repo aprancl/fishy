@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b4f6c">
+  <title>{% block title %}{{ app_name | default('fishy') }}{% endblock %}</title>
+  <!--
+    Typography (task #14): a friendly rounded display face (Baloo 2) + a highly
+    legible body face (Nunito) from Google Fonts, matching the tropical-reef
+    identity. Loaded async-friendly with preconnect; the CSS `:root` font
+    variables fall back to a system stack so the app still looks right offline.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!--
+    Charting: Plotly.js is loaded from CDN by feature phases that render charts.
+    It is chosen for its built-in support for shaded range bands (fill='tonexty'
+    / layout shapes), multi-series overlays, and an attractive default look.
+    Kept out of the base page so the skeleton has zero runtime chart cost.
+  -->
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="reef-header">
+    <div class="reef-header__inner">
+      <span class="reef-logo" aria-hidden="true">🐠</span>
+      <div>
+        <h1 class="reef-title">{{ app_name | default('fishy') }}</h1>
+        <p class="reef-tagline">{{ tagline | default('reef water-parameter notebook') }}</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="reef-main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="reef-footer">
+    <p>local-first · runs on localhost · your data lives in a git-trackable CSV</p>
+  </footer>
+</body>
+</html>

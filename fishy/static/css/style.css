@@ -1,0 +1,935 @@
+/* fishy — tropical-reef base styling.
+   A light, bright, warm foundation. Feature phases build the full theme on top;
+   this establishes the palette variables and layout scaffold. */
+
+:root {
+  /* Core tropical-reef palette (task #1, refined into a cohesive identity in
+     task #14). Names are stable — templates + prior phases reference them. */
+  --reef-deep: #0b4f6c;      /* deep-ocean ink for headings + gradients */
+  --reef-teal: #01baef;      /* lagoon teal — the signature accent + in-range */
+  --reef-teal-ink: #067a9c;  /* darker teal that clears AA on white for text */
+  --reef-lagoon: #17b978;    /* seagrass green */
+  --reef-coral: #ff6b5e;     /* warm coral — the out-of-range / alert accent */
+  --reef-coral-ink: #b23524; /* coral dark enough for AA text on tinted bg */
+  --reef-sun: #ffb703;       /* sunlit gold — playful warm highlight */
+  --reef-hibiscus: #ff5d8f;  /* tropical pink — occasional festive pop */
+  --reef-sand: #fff8ef;      /* warm sandy page wash */
+  --reef-ink: #06323f;       /* body text — high contrast on sand/white */
+  --reef-muted: #4d6b78;     /* muted captions — still AA on sand/white */
+  --reef-card: #ffffff;
+  --reef-line: rgba(11, 79, 108, 0.12);
+
+  /* Gradients + elevation reused across chrome for a unified look. */
+  --reef-grad: linear-gradient(120deg, var(--reef-deep), var(--reef-teal));
+  --reef-grad-warm: linear-gradient(120deg, var(--reef-coral), var(--reef-sun));
+  --reef-shadow: 0 6px 20px rgba(11, 79, 108, 0.12);
+  --reef-shadow-lift: 0 14px 32px rgba(11, 79, 108, 0.22);
+
+  /* Typography — friendly, rounded display + a highly-legible body face, both
+     with robust system fallbacks so the app looks right even offline. */
+  --reef-font-body: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --reef-font-display: "Baloo 2", "Nunito", "Segoe UI", system-ui, sans-serif;
+
+  /* Shared shape language. */
+  --reef-radius: 16px;
+  --reef-radius-sm: 10px;
+  --reef-pill: 999px;
+  --reef-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --reef-focus: #ff8a3d; /* warm, high-visibility keyboard-focus ring */
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--reef-font-body);
+  font-size: 1.02rem;
+  line-height: 1.55;
+  color: var(--reef-ink);
+  background:
+    /* drifting bubble motif — subtle, decorative, never noisy */
+    radial-gradient(10px 10px at 12% 22%, rgba(1, 186, 239, 0.10), transparent 60%),
+    radial-gradient(7px 7px at 82% 14%, rgba(23, 185, 120, 0.10), transparent 60%),
+    radial-gradient(14px 14px at 68% 38%, rgba(255, 183, 3, 0.08), transparent 60%),
+    radial-gradient(9px 9px at 30% 62%, rgba(255, 107, 94, 0.08), transparent 60%),
+    radial-gradient(1200px 420px at 50% -140px, rgba(1, 186, 239, 0.20), transparent),
+    var(--reef-sand);
+  background-attachment: fixed;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, .reef-title { font-family: var(--reef-font-display); }
+
+.reef-header {
+  background: linear-gradient(120deg, var(--reef-deep), var(--reef-teal));
+  color: #fff;
+  box-shadow: var(--reef-shadow);
+}
+
+.reef-header__inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.reef-logo { font-size: 2.2rem; line-height: 1; }
+.reef-title { margin: 0; font-size: 1.6rem; letter-spacing: 0.5px; }
+.reef-tagline { margin: 0.15rem 0 0; opacity: 0.9; font-size: 0.95rem; }
+
+.reef-main {
+  flex: 1;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem;
+}
+
+.reef-card {
+  background: var(--reef-card);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--reef-shadow);
+  border: 1px solid rgba(1, 186, 239, 0.15);
+}
+
+.reef-welcome h2 { margin-top: 0; color: var(--reef-deep); }
+.reef-muted { color: var(--reef-muted); }
+
+.reef-footer {
+  text-align: center;
+  padding: 1rem;
+  color: var(--reef-muted);
+  font-size: 0.85rem;
+}
+
+/* --------------------------------------------------------------------------
+   Tank shelf (landing) — task #4
+   -------------------------------------------------------------------------- */
+.reef-shelf__title { margin: 0 0 0.25rem; color: var(--reef-deep); }
+.reef-shelf__lead { margin: 0 0 1.25rem; }
+
+.reef-shelf__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.reef-tank-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.25rem;
+  background: var(--reef-card);
+  border-radius: 16px;
+  box-shadow: var(--reef-shadow);
+  border: 1px solid rgba(1, 186, 239, 0.15);
+  text-decoration: none;
+  color: var(--reef-ink);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.reef-tank-card:hover,
+.reef-tank-card:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 26px rgba(11, 79, 108, 0.2);
+  border-color: var(--reef-teal);
+  outline: none;
+}
+
+.reef-tank-card__icon { font-size: 1.8rem; line-height: 1; }
+.reef-tank-card__label { font-weight: 600; font-size: 1.15rem; color: var(--reef-deep); }
+.reef-tank-card__id { font-size: 0.8rem; color: var(--reef-muted); }
+
+.reef-empty h3 { margin-top: 0; color: var(--reef-deep); }
+.reef-code {
+  background: rgba(11, 79, 108, 0.06);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  font-size: 0.9rem;
+}
+
+/* --------------------------------------------------------------------------
+   Tank view + persistent switcher — task #4
+   -------------------------------------------------------------------------- */
+.reef-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.reef-switcher__label { font-weight: 600; color: var(--reef-muted); }
+
+.reef-switcher__list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+}
+
+.reef-switcher__link {
+  display: inline-block;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--reef-deep);
+  background: var(--reef-card);
+  border: 1px solid rgba(1, 186, 239, 0.3);
+  font-size: 0.95rem;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.reef-switcher__link:hover,
+.reef-switcher__link:focus-visible {
+  background: rgba(1, 186, 239, 0.12);
+  outline: none;
+}
+
+.reef-switcher__link.is-active {
+  background: linear-gradient(120deg, var(--reef-deep), var(--reef-teal));
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.reef-switcher__home {
+  margin-left: auto;
+  color: var(--reef-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.reef-switcher__home:hover { color: var(--reef-deep); }
+
+.reef-tankview__title { margin: 0 0 0.25rem; color: var(--reef-deep); }
+/* Historical class name (kept for the region test); now holds real tabs. */
+.reef-tabs-placeholder { margin-top: 1rem; }
+
+/* --------------------------------------------------------------------------
+   Parameter tab navigation — task #6 (spec §4.3 / §5.3)
+   Tabs derive from config: one per parameter + an Aggregate slot. Wraps on
+   small screens / many parameters and scrolls horizontally as a fallback so a
+   large parameter set stays usable.
+   -------------------------------------------------------------------------- */
+.reef-tabs {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.reef-tabs__list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0 0 0.2rem;
+  border-bottom: 1px solid rgba(1, 186, 239, 0.2);
+}
+.reef-tabs__item { display: inline-flex; }
+.reef-tabs__item--aggregate { margin-left: auto; }
+.reef-tabs__link {
+  display: inline-block;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--reef-deep);
+  background: var(--reef-card);
+  border: 1px solid rgba(1, 186, 239, 0.3);
+  font-size: 0.95rem;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.reef-tabs__link:hover,
+.reef-tabs__link:focus-visible {
+  background: rgba(1, 186, 239, 0.12);
+  outline: none;
+}
+.reef-tabs__link.is-active {
+  background: linear-gradient(120deg, var(--reef-deep), var(--reef-teal));
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+}
+.reef-tabs__link--aggregate { border-style: dashed; }
+.reef-tabs__hint { margin: 0.75rem 0 0; }
+.reef-tabs__archived {
+  margin: 0.75rem 0 0;
+  padding-top: 0.6rem;
+  border-top: 1px dashed rgba(1, 186, 239, 0.25);
+}
+
+.reef-parameter__panel { display: block; }
+/* Empty downstream seams collapse to nothing until a later task fills them.
+   The chart seam always carries an inline JSON <script>, so it is never :empty
+   once task #7 is in place — its own sizing/empty-state styles apply below. */
+.reef-chart:empty,
+.reef-stats:empty,
+.reef-reference:empty { display: none; }
+
+/* Task #7: time-series chart seam (spec §5.3). Plotly draws into this box. */
+.reef-chart {
+  width: 100%;
+  min-height: 320px;
+  margin-bottom: 1rem;
+}
+.reef-chart__empty {
+  padding: 2.5rem 0;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Per-parameter add-reading form + readings list (task #5, spec §5.2)
+   -------------------------------------------------------------------------- */
+.reef-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--reef-muted);
+  margin-bottom: 0.75rem;
+}
+.reef-crumbs a { color: var(--reef-deep); text-decoration: none; }
+.reef-crumbs a:hover { text-decoration: underline; }
+
+.reef-parameter__title { margin: 0 0 1rem; color: var(--reef-deep); }
+
+.reef-add-reading__title { margin: 0 0 0.75rem; color: var(--reef-deep); }
+
+.reef-add-reading__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.reef-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.85rem;
+  flex: 1 1 12rem;
+}
+.reef-field__label { font-weight: 600; color: var(--reef-ink); font-size: 0.92rem; }
+.reef-field__input {
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(1, 186, 239, 0.35);
+  background: var(--reef-sand);
+  font: inherit;
+  color: var(--reef-ink);
+}
+.reef-field__input:focus-visible {
+  outline: 2px solid var(--reef-teal);
+  outline-offset: 1px;
+}
+
+.reef-add-reading__error {
+  background: rgba(255, 107, 107, 0.12);
+  border: 1px solid var(--reef-coral);
+  color: #8a2b2b;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  margin: 0 0 0.85rem;
+}
+
+.reef-add-reading__save {
+  display: inline-block;
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(120deg, var(--reef-deep), var(--reef-teal));
+}
+.reef-add-reading__save:hover,
+.reef-add-reading__save:focus-visible {
+  filter: brightness(1.06);
+  outline: none;
+}
+
+.reef-readings { margin-top: 1rem; }
+.reef-readings__title { margin: 0 0 0.6rem; color: var(--reef-deep); }
+.reef-readings__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.reef-readings__table th,
+.reef-readings__table td {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid rgba(1, 186, 239, 0.18);
+}
+.reef-readings__table th { color: var(--reef-muted); font-weight: 600; }
+
+/* --------------------------------------------------------------------------
+   Parameter stats panel (task #8, spec §5.3): latest value + in/out-of-range
+   badge, trend, min/max/avg, days-since-last. Rendered from the server-side
+   `stats` dict; degrades to a light "no data yet" note when empty.
+   -------------------------------------------------------------------------- */
+.reef-stats { margin-bottom: 1rem; }
+.reef-stats__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+.reef-stat {
+  background: var(--reef-card);
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  box-shadow: var(--reef-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.reef-stat__label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--reef-muted);
+  font-weight: 600;
+}
+.reef-stat__value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--reef-deep);
+}
+.reef-stat__unit { font-size: 0.9rem; font-weight: 600; color: var(--reef-muted); }
+.reef-badge {
+  align-self: flex-start;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+.reef-badge--in {
+  color: #0b6b3a;
+  background: rgba(32, 191, 85, 0.16);
+}
+.reef-badge--out {
+  color: #a3311a;
+  background: rgba(255, 107, 107, 0.18);
+}
+.reef-trend--up { color: var(--reef-coral); }
+.reef-trend--down { color: var(--reef-teal); }
+.reef-trend--flat { color: var(--reef-muted); }
+.reef-stats__empty {
+  padding: 1.25rem 0;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Reference & action guide (task #10, spec §5.4): curated per-parameter
+   definition / measurement / ideal range / too-high / too-low / signs /
+   remedies, read from the editable content files. Rendered as a labeled
+   accordion below the chart + stats so it informs without obscuring them.
+   Unauthored sections (incl. custom params on the template) show a gentle
+   placeholder rather than an error.
+   -------------------------------------------------------------------------- */
+.reef-reference {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--reef-line, rgba(0, 0, 0, 0.08));
+}
+.reef-reference__head { margin-bottom: 0.75rem; }
+.reef-reference__title {
+  margin: 0 0 0.15rem;
+  font-size: 1.1rem;
+  color: var(--reef-deep);
+}
+.reef-reference__lede { margin: 0; font-size: 0.9rem; }
+.reef-reference__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.reef-reference__section {
+  background: var(--reef-card);
+  border-radius: 12px;
+  box-shadow: var(--reef-shadow);
+  padding: 0.15rem 0.9rem;
+}
+.reef-reference__section.is-placeholder {
+  background: transparent;
+  box-shadow: none;
+  border: 1px dashed var(--reef-line, rgba(0, 0, 0, 0.12));
+}
+.reef-reference__label {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.6rem 0;
+  font-weight: 600;
+  color: var(--reef-deep);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.reef-reference__label::-webkit-details-marker { display: none; }
+.reef-reference__label::before {
+  content: "▸";
+  color: var(--reef-muted);
+  font-size: 0.85em;
+  transition: transform 0.15s ease;
+}
+.reef-reference__section[open] > .reef-reference__label::before {
+  transform: rotate(90deg);
+}
+.reef-reference__body {
+  padding: 0 0 0.75rem;
+  color: var(--reef-ink, inherit);
+  line-height: 1.55;
+}
+.reef-reference__body > :first-child { margin-top: 0; }
+.reef-reference__body > :last-child { margin-bottom: 0; }
+.reef-reference__body p { margin: 0 0 0.6rem; }
+.reef-reference__body ul { margin: 0 0 0.6rem; padding-left: 1.2rem; }
+.reef-reference__body li { margin-bottom: 0.3rem; }
+.reef-reference__body code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 0.05rem 0.35rem;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+.reef-reference__placeholder { margin: 0; font-size: 0.9rem; font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   Aggregate tab (task #12, spec §5.7): the combined all-parameter view for the
+   active tank. A cards row (one card per parameter — latest / trend / in-range
+   badge, reusing .reef-stat / .reef-badge / .reef-trend for consistency) sits
+   above an all-parameter overlay chart on a shared, normalized timeline. A
+   history-table region (#13) waits below.
+   -------------------------------------------------------------------------- */
+.reef-aggregate__title { margin: 0.5rem 0 1rem; color: var(--reef-deep); }
+.reef-aggregate__panel { margin-top: 1rem; }
+.reef-aggregate__empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  background: var(--reef-card);
+  border-radius: 12px;
+  box-shadow: var(--reef-shadow);
+}
+
+/* (1) Cards row */
+.reef-aggregate__cards { margin-bottom: 1.75rem; }
+.reef-aggregate__cards-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+.reef-aggregate-card--out {
+  outline: 2px solid rgba(255, 107, 107, 0.5);
+}
+.reef-aggregate-card__name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--reef-deep);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.reef-aggregate-card__name:hover { text-decoration: underline; }
+.reef-aggregate-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+.reef-aggregate-card__nodata { font-size: 0.85rem; font-style: italic; }
+
+/* (2) Overlay chart */
+.reef-aggregate__overlay { margin-bottom: 1.5rem; }
+.reef-aggregate__overlay-title { margin: 0 0 0.15rem; color: var(--reef-deep); font-size: 1.1rem; }
+.reef-aggregate__overlay-note { margin: 0 0 0.75rem; font-size: 0.88rem; }
+.reef-aggregate-chart {
+  min-height: 320px;
+  background: var(--reef-card);
+  border-radius: 12px;
+  box-shadow: var(--reef-shadow);
+  padding: 0.75rem;
+}
+.reef-aggregate-chart__empty { padding: 2rem 0; text-align: center; }
+
+/* (3) History table region — filled by task #13. Hidden while empty. */
+.reef-aggregate__history:empty { display: none; }
+
+/* Full reading history for the active tank (task #13, spec §5.7): one tidy row
+   per reading, most-recent-first, rendered below the cards + overlay so it never
+   obscures them. Long histories scroll rather than truncate; out-of-range rows
+   are tinted coral to match the chart's out-of-range colour. */
+.reef-aggregate__history { margin-top: 1.75rem; }
+.reef-history__title { margin: 0 0 0.15rem; color: var(--reef-deep); font-size: 1.1rem; }
+.reef-history__note { margin: 0 0 0.75rem; font-size: 0.88rem; }
+.reef-history__scroll {
+  max-height: 28rem;
+  overflow-y: auto;
+  border-radius: 12px;
+  box-shadow: var(--reef-shadow);
+  background: var(--reef-card);
+}
+.reef-history__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.reef-history__table th,
+.reef-history__table td {
+  text-align: left;
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid rgba(1, 186, 239, 0.18);
+  vertical-align: top;
+}
+.reef-history__table th {
+  color: var(--reef-muted);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  background: var(--reef-card);
+}
+.reef-history__row--out {
+  background: rgba(255, 107, 107, 0.1);
+}
+.reef-history__row--out .reef-history__value { font-weight: 600; }
+.reef-history__unit { color: var(--reef-muted); }
+.reef-history__badge { margin-left: 0.4rem; }
+.reef-history__archived {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--reef-muted);
+  background: rgba(1, 186, 239, 0.12);
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+}
+
+/* --------------------------------------------------------------------------
+   Empty / edge states + non-fatal notices (task #15, spec §5.8 / §9.4).
+   `.reef-empty` is the SHARED marker class every friendly empty state carries
+   (no-tanks shelf, no-parameters, no-readings, aggregate/history empties) so
+   task #14 can theme them all uniformly from one selector. Existing state-
+   specific classes (`.reef-stats__empty`, `.reef-aggregate__empty`, …) are
+   kept alongside it. `.reef-empty--inline` is the lighter, inline variant used
+   for in-panel prompts (vs the boxed card on the shelf).
+
+   `.reef-notice` (+ `--warn`) is the dismissible-style malformed-CSV banner
+   (`_notice.html`): non-fatal, listing the skipped rows while valid data still
+   renders below. Functional styling only — #14 owns the final palette.
+   -------------------------------------------------------------------------- */
+.reef-empty {
+  color: var(--reef-muted);
+}
+.reef-empty--inline {
+  margin: 0.5rem 0;
+}
+
+.reef-notice {
+  margin: 0 0 1.25rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  background: rgba(255, 107, 107, 0.1);
+}
+.reef-notice--warn { border-left: 4px solid var(--reef-coral); }
+.reef-notice__lead { margin: 0 0 0.5rem; }
+.reef-notice__icon { margin-right: 0.35rem; }
+.reef-notice__list {
+  margin: 0.35rem 0;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+}
+.reef-notice__list li { margin: 0.15rem 0; }
+.reef-notice__hint { margin: 0.5rem 0 0; font-size: 0.85rem; }
+.reef-notice__lead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem; }
+
+/* ==========================================================================
+   TROPICAL-REEF COHESIVE THEME (task #14, spec §6.4 / §6.5 / §9.4)
+
+   The final polish pass. Everything above establishes structure + functional
+   styling per feature; this section unifies the look into one bright, warm,
+   lively tropical-reef identity — refined palette, playful marine motifs
+   (waves, bubbles), delightful hover/transition details — WITHOUT touching any
+   class name, id, data-attribute or DOM contract the app + tests rely on.
+
+   Hard accessibility rules honoured here (§6.4):
+     • body/caption text keeps AA contrast (see :root muted/ink choices);
+     • out-of-range is NEVER color-only — badges carry a glyph + "Out of range"
+       text, chart out-of-range markers use a distinct SHAPE (see chart.js /
+       aggregate.js), and out-of-range rows carry an explicit badge;
+     • every interactive element gets a clearly-visible keyboard focus ring;
+     • all motion is disabled under prefers-reduced-motion.
+   ========================================================================== */
+
+/* --- Global keyboard focus: one warm, unmistakable ring everywhere -------- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--reef-focus);
+  outline-offset: 2px;
+  border-radius: var(--reef-radius-sm);
+}
+
+/* --- Header: deeper ocean gradient + a playful cresting-wave motif -------- */
+.reef-header {
+  position: relative;
+  background:
+    radial-gradient(600px 200px at 85% -40px, rgba(255, 183, 3, 0.28), transparent),
+    linear-gradient(120deg, var(--reef-deep) 0%, #0a7fa6 55%, var(--reef-teal) 100%);
+  overflow: hidden;
+}
+/* light sunbeam shimmer across the header */
+.reef-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(420px 160px at 18% -30px, rgba(255, 255, 255, 0.22), transparent 70%);
+  pointer-events: none;
+}
+/* a hand-drawn wave crest riding along the bottom edge */
+.reef-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 16px;
+  background:
+    radial-gradient(circle at 12px -6px, var(--reef-sand) 12px, transparent 13px) repeat-x;
+  background-size: 24px 16px;
+  opacity: 0.95;
+  pointer-events: none;
+}
+.reef-header__inner { position: relative; z-index: 1; }
+.reef-logo {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  transition: transform 0.4s var(--reef-ease);
+}
+.reef-header:hover .reef-logo { transform: rotate(-8deg) scale(1.08); }
+.reef-title { font-weight: 700; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18); }
+
+/* --- Footer: a gentle tide line --------------------------------------- */
+.reef-footer {
+  position: relative;
+  margin-top: 1.5rem;
+}
+.reef-footer::before {
+  content: "🐚 🪸 🐠 🌊";
+  display: block;
+  font-size: 0.9rem;
+  letter-spacing: 0.5rem;
+  opacity: 0.55;
+  margin-bottom: 0.35rem;
+}
+
+/* --- Cards + tank cards: lift with a warm coral kiss on hover ---------- */
+.reef-card { transition: box-shadow 0.2s var(--reef-ease), transform 0.2s var(--reef-ease); }
+.reef-tank-card { position: relative; overflow: hidden; }
+.reef-tank-card::after {
+  /* a coral/sun sheen that sweeps in on hover for a touch of delight */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--reef-grad-warm);
+  opacity: 0;
+  transition: opacity 0.2s var(--reef-ease);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+.reef-tank-card:hover::after,
+.reef-tank-card:focus-visible::after { opacity: 0.06; }
+.reef-tank-card:hover,
+.reef-tank-card:focus-visible {
+  box-shadow: var(--reef-shadow-lift);
+  border-color: var(--reef-teal);
+}
+.reef-tank-card__icon { transition: transform 0.2s var(--reef-ease); }
+.reef-tank-card:hover .reef-tank-card__icon { transform: translateY(-2px) scale(1.1); }
+
+/* --- Section headings: a coral underline flourish --------------------- */
+.reef-shelf__title,
+.reef-tankview__title,
+.reef-parameter__title,
+.reef-aggregate__title {
+  position: relative;
+  padding-bottom: 0.35rem;
+}
+.reef-shelf__title::after,
+.reef-tankview__title::after,
+.reef-parameter__title::after,
+.reef-aggregate__title::after {
+  content: "";
+  display: block;
+  width: 3.5rem;
+  height: 4px;
+  margin-top: 0.35rem;
+  border-radius: var(--reef-pill);
+  background: var(--reef-grad-warm);
+}
+
+/* --- Pills (tabs + switcher): consistent, springy, teal-ink text ------ */
+.reef-tabs__link,
+.reef-switcher__link {
+  color: var(--reef-teal-ink);
+  font-weight: 600;
+  transition: background 0.15s var(--reef-ease), color 0.15s var(--reef-ease),
+              transform 0.15s var(--reef-ease), box-shadow 0.15s var(--reef-ease);
+}
+.reef-tabs__link:hover,
+.reef-switcher__link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(1, 186, 239, 0.22);
+}
+.reef-tabs__link.is-active,
+.reef-switcher__link.is-active {
+  box-shadow: 0 4px 14px rgba(11, 79, 108, 0.28);
+}
+
+/* --- Buttons: warm, tactile, tropical --------------------------------- */
+.reef-add-reading__save {
+  box-shadow: 0 6px 16px rgba(1, 130, 170, 0.3);
+  transition: transform 0.15s var(--reef-ease), filter 0.15s var(--reef-ease),
+              box-shadow 0.15s var(--reef-ease);
+}
+.reef-add-reading__save:hover,
+.reef-add-reading__save:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(1, 130, 170, 0.34);
+}
+.reef-add-reading__save:active { transform: translatey(0); }
+
+/* --- Form fields: teal focus glow ------------------------------------- */
+.reef-field__input {
+  transition: border-color 0.15s var(--reef-ease), box-shadow 0.15s var(--reef-ease);
+}
+.reef-field__input:focus,
+.reef-field__input:focus-visible {
+  border-color: var(--reef-teal);
+  box-shadow: 0 0 0 3px rgba(1, 186, 239, 0.18);
+  outline: none; /* the glow + the global focus ring handle visibility */
+}
+.reef-field__input:focus-visible { outline: 3px solid var(--reef-focus); outline-offset: 2px; }
+
+/* --- Status badges: keep the NON-COLOR cue (glyph + text) prominent ---- */
+.reef-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  border: 1px solid transparent;
+  line-height: 1.2;
+}
+.reef-badge--in {
+  color: #0b6b3a;
+  background: rgba(23, 185, 120, 0.16);
+  border-color: rgba(23, 185, 120, 0.45);
+}
+.reef-badge--out {
+  color: var(--reef-coral-ink);
+  background: rgba(255, 107, 94, 0.16);
+  border-color: rgba(255, 107, 94, 0.5);
+  font-weight: 700;
+}
+/* out-of-range cards: a coral edge + tiny corner flag reinforce the badge */
+.reef-aggregate-card--out {
+  outline: 2px solid rgba(255, 107, 94, 0.55);
+  background: linear-gradient(180deg, rgba(255, 107, 94, 0.06), transparent);
+}
+
+/* --- Stat cards: friendly rounded tiles with a hairline of colour ----- */
+.reef-stat {
+  border: 1px solid var(--reef-line);
+  border-top: 3px solid var(--reef-teal);
+  transition: transform 0.15s var(--reef-ease), box-shadow 0.15s var(--reef-ease);
+}
+.reef-stat:hover { transform: translateY(-2px); box-shadow: var(--reef-shadow-lift); }
+.reef-aggregate-card--out { border-top-color: var(--reef-coral); }
+
+/* --- Reference accordion: warm hover on the summary rows -------------- */
+.reef-reference__section { transition: box-shadow 0.15s var(--reef-ease); }
+.reef-reference__section[open] { box-shadow: 0 8px 20px rgba(11, 79, 108, 0.14); }
+.reef-reference__label { transition: color 0.15s var(--reef-ease); }
+.reef-reference__label:hover { color: var(--reef-teal-ink); }
+
+/* --- Empty states + notices: cohesive, friendly, on-theme ------------- */
+.reef-empty h3 { font-family: var(--reef-font-display); }
+.reef-notice--warn {
+  border-left-width: 5px;
+  background: linear-gradient(180deg, rgba(255, 183, 3, 0.10), rgba(255, 107, 94, 0.08));
+}
+
+/* --- Charts: give the Plotly boxes the same soft-card frame ------------ */
+.reef-chart {
+  background: var(--reef-card);
+  border-radius: var(--reef-radius);
+  box-shadow: var(--reef-shadow);
+  border: 1px solid var(--reef-line);
+  padding: 0.75rem;
+}
+
+/* --- Dense aggregate view: keep it airy + legible under the theme ------ */
+.reef-history__table th { letter-spacing: 0.02em; }
+.reef-history__table tbody tr { transition: background 0.12s var(--reef-ease); }
+.reef-history__table tbody tr:hover { background: rgba(1, 186, 239, 0.06); }
+.reef-history__row--out { background: rgba(255, 107, 94, 0.1); }
+.reef-history__row--out:hover { background: rgba(255, 107, 94, 0.16); }
+
+/* --- Responsive: comfortable on mobile-width windows ------------------ */
+@media (max-width: 640px) {
+  body { font-size: 0.98rem; }
+  .reef-header__inner { padding: 0.9rem 1rem; gap: 0.65rem; }
+  .reef-logo { font-size: 1.8rem; }
+  .reef-title { font-size: 1.35rem; }
+  .reef-main { padding: 1.1rem 0.9rem; }
+  .reef-card { padding: 1.1rem; border-radius: 14px; }
+  .reef-shelf__grid { grid-template-columns: 1fr; }
+  .reef-stats__grid,
+  .reef-aggregate__cards-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .reef-switcher__home { margin-left: 0; }
+  .reef-history__table { font-size: 0.88rem; }
+  .reef-history__table th,
+  .reef-history__table td { padding: 0.4rem 0.5rem; }
+}
+
+/* --- Respect reduced-motion: no transforms/animations, no sweeps ------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reef-header:hover .reef-logo,
+  .reef-tank-card:hover .reef-tank-card__icon,
+  .reef-tank-card:hover,
+  .reef-tank-card:focus-visible,
+  .reef-stat:hover,
+  .reef-tabs__link:hover,
+  .reef-switcher__link:hover,
+  .reef-add-reading__save:hover { transform: none; }
+}

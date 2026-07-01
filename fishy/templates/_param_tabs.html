@@ -1,0 +1,48 @@
+{#
+  Parameter tab navigation — the Tank View shell (task #6, spec §4.3 / §5.3).
+
+  Renders one tab per CONFIGURED parameter PLUS a trailing "Aggregate" tab entry.
+  Tabs derive purely from config: adding a `[[parameters]]` block to
+  config/fishy.toml adds a tab with NO code change. Each parameter tab is a link
+  to `parameter_view` (/tank/<tank_id>/parameter/<param_id>), so switching tabs
+  keeps the active tank in the URL path — flipping tabs preserves the active
+  tank for free, and the per-parameter page (task #5) is reused as the tab panel.
+
+  Context it reads (pass these when including):
+    * active_tank  — the scoped Tank (needs .id, .display uses .label). Required.
+    * parameters   — list[Parameter] to render as tabs (pass config.parameters).
+    * active_param — id of the currently active parameter, or None (tank view).
+    * active_tab   — "aggregate" when the Aggregate tab is active, else None.
+
+  DOWNSTREAM: the Aggregate tab now links to the real `aggregate_view` route
+  (task #12 — combined cards row + all-parameter overlay chart for the active
+  tank). Task #13 adds a history table to the SAME aggregate page (a marked
+  empty region already waits at the bottom of aggregate.html), so no change is
+  needed here for #13.
+#}
+<nav class="reef-tabs" aria-label="Parameters">
+  <ul class="reef-tabs__list" role="list">
+    {% for param in parameters %}
+    <li class="reef-tabs__item">
+      <a class="reef-tabs__link{% if param.id == active_param %} is-active{% endif %}"
+         href="{{ url_for('parameter_view', tank_id=active_tank.id, param_id=param.id) }}"
+         data-param-id="{{ param.id }}"
+         {% if param.id == active_param %}aria-current="page"{% endif %}>
+        {{ param.display_name }}
+      </a>
+    </li>
+    {% endfor %}
+
+    {# Aggregate tab (task #12): the combined all-parameter view for this tank.
+       Links to `aggregate_view` so the active tank stays in the URL path, just
+       like the parameter tabs. Marked active via active_tab == 'aggregate'. #}
+    <li class="reef-tabs__item reef-tabs__item--aggregate">
+      <a class="reef-tabs__link reef-tabs__link--aggregate{% if active_tab == 'aggregate' %} is-active{% endif %}"
+         href="{{ url_for('aggregate_view', tank_id=active_tank.id) }}"
+         data-tab="aggregate"
+         {% if active_tab == 'aggregate' %}aria-current="page"{% endif %}>
+        <span aria-hidden="true">📊</span> Aggregate
+      </a>
+    </li>
+  </ul>
+</nav>

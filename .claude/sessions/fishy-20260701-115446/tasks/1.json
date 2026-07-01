@@ -1,0 +1,24 @@
+{
+  "id": "1",
+  "subject": "Choose stack and scaffold app skeleton",
+  "description": "Select the web framework (Flask vs. FastAPI) and charting library, then scaffold a minimal Python web app that runs on localhost with a single command. Establish project structure, dependency management, and a basic served page. Bind to localhost only.\n\nSelection criteria (per spec §7.2): minimal footprint, easy single-command run, charting library must support shaded range bands + multi-series overlays attractively.\n\n**Acceptance Criteria:**\n\n_Functional:_\n- [ ] Framework and charting library chosen with rationale documented (resolves Open Questions #1)\n- [ ] Project structure, dependency manifest, and entry point created\n- [ ] `python app.py` (or equivalent single command) starts the server and serves a basic page on localhost\n- [ ] Server binds to localhost only (not reachable from other machines)\n\n_Edge Cases:_\n- [ ] Port already in use surfaces a clear message rather than a stack trace\n\n_Error Handling:_\n- [ ] Missing dependencies produce an actionable error/instruction\n\n**Testing Requirements:**\n• Unit: App factory/startup returns a valid app instance\n• Integration: Server responds 200 on the root route\n• Smoke: Single-command launch renders the base page on localhost\n\nSource: specs/fishy-SPEC.md Section 9.1 / 7.2",
+  "activeForm": "Choosing stack and scaffolding app skeleton",
+  "status": "completed",
+  "blocks": [
+    "2",
+    "3",
+    "16"
+  ],
+  "blockedBy": [],
+  "metadata": {
+    "priority": "critical",
+    "complexity": "M",
+    "source_section": "9.1 Foundation / 7.2 Tech Stack",
+    "spec_path": "specs/fishy-SPEC.md",
+    "feature_name": "Foundation",
+    "task_uid": "specs/fishy-SPEC.md:foundation:scaffold:001",
+    "task_group": "fishy",
+    "spec_phase": 1,
+    "spec_phase_name": "Foundation"
+  }
+}

@@ -1,0 +1,4 @@
+# fishy runtime dependencies — kept intentionally minimal (spec §7.5).
+# Flask serves the UI and renders Jinja2 templates. Charting is done client-side
+# with Plotly.js loaded from a CDN, so there is no Python charting dependency.
+Flask>=3.0,<4.0

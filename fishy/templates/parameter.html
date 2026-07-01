@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} — {{ active_tank.label }} · {{ parameter.display_name }}{% endblock %}
+
+{% block head %}
+  {# Charting is client-side Plotly.js from a CDN (spec §7.5 — no Python chart
+     dep). Loaded only on pages that chart. chart.js reads the inline JSON
+     contract emitted in the .reef-chart seam below and draws the series. #}
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+  <script src="{{ url_for('static', filename='js/chart.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+{#
+  Per-parameter page (spec §5.2 / §5.3). Reachable at
+  /tank/<tank_id>/parameter/<param_id>. This page doubles as the Tank View's
+  parameter TAB PANEL (task #6): the tab nav below is the same one shown on the
+  tank landing, with THIS parameter marked active, so switching tabs keeps the
+  active tank in the URL (`active_tank.id`) and never loses scope.
+
+  ── CONTENT-REGION SEAMS FOR DOWNSTREAM TASKS ─────────────────────────────────
+  Later tasks render INTO the clearly-marked empty regions inside this panel.
+  Target them by CSS class + data attributes; do NOT restructure this shell:
+
+    * task #7  time-series chart + range band
+        → div.reef-chart[data-tank-id][data-parameter-id]
+    * task #8  stats (latest, trend, min/max/avg, days-since, in/out-of-range)
+        → div.reef-stats[data-parameter-id]
+    * task #10 curated reference & action-guide content
+        → div.reef-reference[data-parameter-id]
+
+  The add-reading form (task #5, via _add_reading_form.html) and the logged-
+  readings table already live in this panel below.
+#}
+<nav class="reef-crumbs" aria-label="Breadcrumb">
+  <a href="{{ url_for('index') }}">All tanks</a>
+  <span aria-hidden="true">›</span>
+  <a href="{{ url_for('tank_view', tank_id=active_tank.id) }}">{{ active_tank.label }}</a>
+  <span aria-hidden="true">›</span>
+  <span aria-current="page">{{ parameter.display_name }}</span>
+</nav>
+
+{# Non-fatal malformed-CSV notice (task #15): lists any skipped rows; valid
+   readings/chart/stats below still load. Renders nothing when data is clean. #}
+{% include "_notice.html" %}
+
+<section class="reef-parameter"
+         data-tank-id="{{ active_tank.id }}"
+         data-parameter-id="{{ parameter.id }}">
+  <h2 class="reef-parameter__title">
+    <span aria-hidden="true">🐠</span> {{ parameter.display_name }}
+    <span class="reef-muted">· {{ active_tank.label }}</span>
+  </h2>
+
+  {# Parameter tab navigation — this parameter's tab is marked active. #}
+  {% include "_param_tabs.html" %}
+
+  <div class="reef-parameter__panel" role="tabpanel"
+       aria-label="{{ parameter.display_name }} for {{ active_tank.label }}">
+
+    {# Task #7: Plotly time-series chart + shaded target-range band.
+       The server serialises the readings (active tank + this parameter) and the
+       resolved range into a JSON contract; fishy/static/js/chart.js reads it and
+       calls Plotly.newPlot on this div. Inline JSON avoids an extra round trip. #}
+    <div class="reef-chart"
+         data-tank-id="{{ active_tank.id }}"
+         data-parameter-id="{{ parameter.id }}"
+         aria-label="{{ parameter.display_name }} chart">
+      <script type="application/json" class="reef-chart-data">{{ chart_data | tojson }}</script>
+    </div>
+
+    {# Task #8: at-a-glance stats for this tank+parameter's visible history.
+       Values come from the server-side `stats` dict (fishy/__init__.py
+       ::_parameter_stats), which reuses the chart contract's sorted+classified
+       points so the panel and chart never disagree. Empty history degrades to a
+       light "no data yet" note (full empty-state polish is task #15). #}
+    <div class="reef-stats" data-parameter-id="{{ parameter.id }}">
+      {% if stats.has_data %}
+      <ul class="reef-stats__grid" aria-label="{{ parameter.display_name }} summary">
+        <li class="reef-stat reef-stat--latest">
+          <span class="reef-stat__label">Latest</span>
+          <span class="reef-stat__value">{{ stats.latest.value_display }}{% if stats.unit %} <span class="reef-stat__unit">{{ stats.unit }}</span>{% endif %}</span>
+          {% if stats.latest.in_range %}
+          <span class="reef-badge reef-badge--in"><span aria-hidden="true">✓</span> In range</span>
+          {% else %}
+          <span class="reef-badge reef-badge--out"><span aria-hidden="true">⚠</span> Out of range</span>
+          {% endif %}
+        </li>
+        <li class="reef-stat reef-stat--trend">
+          <span class="reef-stat__label">Trend</span>
+          {% if stats.trend == 'up' %}
+          <span class="reef-stat__value reef-trend reef-trend--up"><span aria-hidden="true">↑</span> Rising</span>
+          {% elif stats.trend == 'down' %}
+          <span class="reef-stat__value reef-trend reef-trend--down"><span aria-hidden="true">↓</span> Falling</span>
+          {% elif stats.trend == 'flat' %}
+          <span class="reef-stat__value reef-trend reef-trend--flat"><span aria-hidden="true">→</span> Steady</span>
+          {% else %}
+          <span class="reef-stat__value reef-muted">Single reading</span>
+          {% endif %}
+        </li>
+        <li class="reef-stat reef-stat--range">
+          <span class="reef-stat__label">Min / Max / Avg</span>
+          <span class="reef-stat__value">{{ stats.min_display }} / {{ stats.max_display }} / {{ stats.avg_display }}{% if stats.unit %} <span class="reef-stat__unit">{{ stats.unit }}</span>{% endif %}</span>
+        </li>
+        <li class="reef-stat reef-stat--since">
+          <span class="reef-stat__label">Days since last</span>
+          <span class="reef-stat__value">
+            {% if stats.days_since_last == 0 %}Today{% else %}{{ stats.days_since_last }}{% endif %}
+          </span>
+        </li>
+      </ul>
+      {% else %}
+      <p class="reef-muted reef-stats__empty reef-empty reef-empty--inline">No data yet — log your first reading above to see stats.</p>
+      {% endif %}
+    </div>
+
+    <div class="reef-card">
+      {% include "_add_reading_form.html" %}
+    </div>
+
+    <div class="reef-card reef-readings">
+      <h3 class="reef-readings__title">Logged readings</h3>
+      {% if readings %}
+      <table class="reef-readings__table">
+        <thead>
+          <tr><th scope="col">Date</th><th scope="col">Value</th><th scope="col">Note</th></tr>
+        </thead>
+        <tbody>
+          {% for reading in readings %}
+          <tr>
+            <td>{{ reading.date.isoformat() }}</td>
+            <td>{{ reading.to_row()['value'] }}{% if reading.unit %} {{ reading.unit }}{% endif %}</td>
+            <td>{{ reading.note }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="reef-muted reef-empty reef-empty--inline">No readings logged yet — add your first one using the form above.</p>
+      {% endif %}
+    </div>
+
+    {# Task #10: curated reference & action-guide content (spec §5.4), read from
+       the editable content files and rendered below the data views so it never
+       obscures them. Missing/partial sections degrade to gentle placeholders. #}
+    <div class="reef-reference" data-parameter-id="{{ parameter.id }}">
+      {% include "_param_reference.html" %}
+    </div>
+  </div>
+</section>
+{% endblock %}

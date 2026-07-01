@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} — your tanks{% endblock %}
+
+{% block content %}
+<section class="reef-shelf">
+  <h2 class="reef-shelf__title">Your tanks 🪸</h2>
+
+  {% if tanks %}
+  <p class="reef-muted reef-shelf__lead">Pick a tank to log and review its water parameters.</p>
+  <ul class="reef-shelf__grid" role="list">
+    {% for tank in tanks %}
+    <li class="reef-shelf__item">
+      <a class="reef-tank-card" href="{{ url_for('tank_view', tank_id=tank.id) }}">
+        <span class="reef-tank-card__icon" aria-hidden="true">🐠</span>
+        <span class="reef-tank-card__label">{{ tank.label }}</span>
+        <span class="reef-tank-card__id">{{ tank.id }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="reef-card reef-empty">
+    <h3>No tanks configured yet 🐚</h3>
+    <p>fishy reads your tanks from <code>config/fishy.toml</code>. Add one to get started:</p>
+    <pre class="reef-code">[[tanks]]
+id = "reef-a"
+label = "Reef A"</pre>
+    <p class="reef-muted">Save the file and refresh this page — your tank will appear here.</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

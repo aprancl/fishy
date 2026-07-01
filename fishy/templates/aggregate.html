@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} — {{ active_tank.label }} · Aggregate{% endblock %}
+
+{% block head %}
+  {# Charting is client-side Plotly.js from a CDN (spec §7.5 — no Python chart
+     dep). aggregate.js reads the inline JSON list emitted in the
+     .reef-aggregate-chart seam below and overlays every parameter's series on a
+     shared, normalized timeline with a click-to-toggle legend. #}
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+  <script src="{{ url_for('static', filename='js/aggregate.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+{#
+  Aggregate tab (spec §5.7). Reachable at /tank/<tank_id>/aggregate. The
+  combined all-parameter view for the active tank named in the URL path:
+    1. a cards row — one card per parameter (latest, trend, in/out-of-range).
+    2. an overlay chart — every parameter on a shared, normalized timeline.
+  Both are scoped to `active_tank` (no cross-tank comparison in v1) and reuse the
+  stats contract (#8) + chart contract (#7) + per-tank ranges (#9).
+
+  Reuses the SAME base layout + tank switcher + tab nav as the tank/parameter
+  pages, so switching tanks or tabs keeps scope. `active_tab == "aggregate"`
+  marks the Aggregate tab active.
+#}
+<nav class="reef-switcher" aria-label="Switch tank">
+  <span class="reef-switcher__label">Tank:</span>
+  <ul class="reef-switcher__list" role="list">
+    {% for tank in tanks %}
+    <li>
+      <a class="reef-switcher__link{% if tank.id == active_tank.id %} is-active{% endif %}"
+         href="{{ url_for('tank_view', tank_id=tank.id) }}"
+         {% if tank.id == active_tank.id %}aria-current="page"{% endif %}>
+        {% if tank.id == active_tank.id %}<span aria-hidden="true">✓</span> {% endif %}{{ tank.label }}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  <a class="reef-switcher__home" href="{{ url_for('index') }}">← All tanks</a>
+</nav>
+
+{# Non-fatal malformed-CSV notice (task #15): lists any skipped rows; valid
+   cards/overlay/history below still load. Renders nothing when data is clean. #}
+{% include "_notice.html" %}
+
+<section class="reef-aggregate" data-tank-id="{{ active_tank.id }}">
+  <nav class="reef-crumbs" aria-label="Breadcrumb">
+    <a href="{{ url_for('index') }}">All tanks</a>
+    <span aria-hidden="true">›</span>
+    <a href="{{ url_for('tank_view', tank_id=active_tank.id) }}">{{ active_tank.label }}</a>
+    <span aria-hidden="true">›</span>
+    <span aria-current="page">Aggregate</span>
+  </nav>
+
+  <h2 class="reef-aggregate__title">
+    <span aria-hidden="true">📊</span> Aggregate
+    <span class="reef-muted">· {{ active_tank.label }}</span>
+  </h2>
+
+  {# Parameter tab navigation — the Aggregate tab is marked active. #}
+  {% include "_param_tabs.html" %}
+
+  <div class="reef-aggregate__panel" role="tabpanel"
+       aria-label="Aggregate view for {{ active_tank.label }}">
+
+    {% if not has_any_readings %}
+    {# Friendly, actionable empty state (task #15): points to the parameter tabs
+       to log the first reading. `.reef-empty` marks it for uniform theming (#14). #}
+    <p class="reef-muted reef-aggregate__empty reef-empty">
+      No readings logged for <strong>{{ active_tank.label }}</strong> yet. Pick a
+      parameter tab above to log your first reading — cards and the overlay chart
+      will appear here once there's data.
+    </p>
+    {% else %}
+
+    {# ── (1) Cards row: one stat-card per parameter ──────────────────────────
+       Reuses the .reef-stat / .reef-badge / .reef-trend markup from the
+       per-parameter stats panel for visual consistency. Each card shows the
+       latest value, its trend arrow, and an in/out-of-range badge. Parameters
+       with no readings render a light "no data" card. #}
+    <section class="reef-aggregate__cards" aria-label="Latest readings by parameter">
+      <ul class="reef-aggregate__cards-grid" role="list">
+        {% for card in cards %}
+        <li class="reef-stat reef-aggregate-card{% if card.stats.has_data and not card.stats.latest.in_range %} reef-aggregate-card--out{% endif %}"
+            data-parameter-id="{{ card.parameter_id }}">
+          <a class="reef-aggregate-card__name"
+             href="{{ url_for('parameter_view', tank_id=active_tank.id, param_id=card.parameter_id) }}">
+            {{ card.display_name }}
+          </a>
+          {% if card.stats.has_data %}
+          <span class="reef-stat__value">{{ card.stats.latest.value_display }}{% if card.unit %} <span class="reef-stat__unit">{{ card.unit }}</span>{% endif %}</span>
+          <div class="reef-aggregate-card__meta">
+            {% if card.stats.trend == 'up' %}
+            <span class="reef-trend reef-trend--up" title="Rising"><span aria-hidden="true">↑</span> Rising</span>
+            {% elif card.stats.trend == 'down' %}
+            <span class="reef-trend reef-trend--down" title="Falling"><span aria-hidden="true">↓</span> Falling</span>
+            {% elif card.stats.trend == 'flat' %}
+            <span class="reef-trend reef-trend--flat" title="Steady"><span aria-hidden="true">→</span> Steady</span>
+            {% else %}
+            <span class="reef-trend reef-trend--flat reef-muted"><span aria-hidden="true">•</span> Single reading</span>
+            {% endif %}
+            {% if card.stats.latest.in_range %}
+            <span class="reef-badge reef-badge--in"><span aria-hidden="true">✓</span> In range</span>
+            {% else %}
+            <span class="reef-badge reef-badge--out"><span aria-hidden="true">⚠</span> Out of range</span>
+            {% endif %}
+          </div>
+          {% else %}
+          <span class="reef-stat__value reef-muted">—</span>
+          <span class="reef-aggregate-card__nodata reef-muted">No readings yet</span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    {# ── (2) Overlay chart: all parameters on a shared, normalized timeline ───
+       The server serialises one chart-series contract per parameter (each point
+       carries date, raw value, normalized `norm`, and in_range). aggregate.js
+       plots one line per series on a common 0..1 y-axis so wildly-different
+       scales stay comparable, highlights out-of-range points, and provides a
+       click-to-toggle legend (display name + unit). Inline JSON — no round trip. #}
+    <section class="reef-aggregate__overlay" aria-label="All-parameter overlay chart">
+      <h3 class="reef-aggregate__overlay-title">All parameters over time</h3>
+      <p class="reef-muted reef-aggregate__overlay-note">
+        Values are normalized to a shared 0–1 scale so parameters on very
+        different scales stay comparable. Hover a point for its real value; click
+        a legend entry to toggle that parameter's line.
+      </p>
+      <div class="reef-aggregate-chart"
+           data-tank-id="{{ active_tank.id }}"
+           aria-label="Overlay of all parameters for {{ active_tank.label }}">
+        <script type="application/json" class="reef-aggregate-data">{{ overlay | tojson }}</script>
+      </div>
+    </section>
+    {% endif %}
+
+    {# ── (3) History table: full reading history for the active tank ──────────
+       Task #13 (spec §5.7). One tidy row per reading (date, parameter, value,
+       note), most-recent-first — NOT a date×parameter grid, so partial logging
+       shows naturally and multiple same-day readings each keep their own row.
+       Out-of-range values are highlighted using the SAME per-tank ranges the
+       charts use (server-resolved `row.in_range`). Archived/unknown parameters
+       (no config entry) render with their raw id + an "archived" tag and are
+       never flagged. Rendered below the cards + overlay so it never obscures
+       them; the list scrolls for long histories (no silent truncation). #}
+    <section class="reef-aggregate__history" aria-label="Reading history">
+      <h3 class="reef-history__title">Reading history</h3>
+      {% if history %}
+      <p class="reef-muted reef-history__note">
+        Every reading logged for <strong>{{ active_tank.label }}</strong>,
+        newest first ({{ history | length }} total). Out-of-range values are
+        flagged; scroll for older readings.
+      </p>
+      <div class="reef-history__scroll">
+        <table class="reef-history__table">
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Parameter</th>
+              <th scope="col">Value</th>
+              <th scope="col">Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in history %}
+            <tr class="reef-history__row{% if not row.in_range %} reef-history__row--out{% endif %}"
+                data-parameter-id="{{ row.parameter_id }}">
+              <td class="reef-history__date">{{ row.date }}</td>
+              <td class="reef-history__param">
+                {{ row.parameter_label }}
+                {% if row.is_archived %}
+                <span class="reef-history__archived" title="This parameter is no longer configured">archived</span>
+                {% endif %}
+              </td>
+              <td class="reef-history__value">
+                {{ row.value_display }}{% if row.unit %} <span class="reef-history__unit">{{ row.unit }}</span>{% endif %}
+                {% if not row.in_range %}
+                <span class="reef-badge reef-badge--out reef-history__badge"><span aria-hidden="true">⚠</span> Out of range</span>
+                {% endif %}
+              </td>
+              <td class="reef-history__note-cell">{{ row.note }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="reef-muted reef-empty reef-empty--inline">No readings logged for {{ active_tank.label }} yet — pick a parameter tab above to log your first reading.</p>
+      {% endif %}
+    </section>
+  </div>
+</section>
+{% endblock %}

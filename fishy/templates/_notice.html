@@ -1,0 +1,35 @@
+{#
+  Malformed-CSV notice (task #15, spec §5.8 / §9.4).
+
+  A clear, NON-FATAL banner surfacing the warnings the storage layer (task #2)
+  produced while loading `data/readings.csv`. Storage skips each malformed row
+  with a row-identifying reason and still returns every valid reading, so the
+  good data on this page rendered normally — this notice just tells the user
+  which rows were dropped and how to fix them.
+
+  Context: `load_warnings` — a list of "row N: skipped — reason" strings (empty
+  when the file is fine or first-run, in which case nothing renders).
+
+  Standardized class for task #14 to theme: `.reef-notice` (+ `.reef-notice--warn`).
+#}
+{% if load_warnings %}
+<div class="reef-notice reef-notice--warn" role="status" aria-live="polite">
+  <p class="reef-notice__lead">
+    <span class="reef-notice__icon" aria-hidden="true">⚠️</span>
+    <strong>{{ load_warnings | length }} row{{ 's' if load_warnings | length != 1 }}</strong>
+    in your data file <code>data/readings.csv</code>
+    {{ 'was' if load_warnings | length == 1 else 'were' }} skipped while loading.
+    Your valid readings still loaded and are shown below.
+  </p>
+  <ul class="reef-notice__list">
+    {% for warning in load_warnings %}
+    <li>{{ warning }}</li>
+    {% endfor %}
+  </ul>
+  <p class="reef-notice__hint reef-muted">
+    Fix or remove {{ 'that row' if load_warnings | length == 1 else 'those rows' }}
+    in <code>data/readings.csv</code> (each reading needs
+    <code>tank,parameter,date,value,unit,note</code>) to clear this notice.
+  </p>
+</div>
+{% endif %}

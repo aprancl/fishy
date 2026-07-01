@@ -1,0 +1,51 @@
+{#
+  Task #10 — curated reference & action-guide content (spec §5.4).
+
+  Rendered INTO the `.reef-reference` seam of parameter.html, BELOW the chart,
+  stats, add-reading form and readings table, so it informs without ever
+  obscuring the data views. Content is a `ParameterContent` (`content`) supplied
+  by `_render_parameter`, sourced from the editable `content/<id>.md` files
+  (shipped defaults, user-overridable via config content dirs).
+
+  Each of the seven canonical sections (SECTION_ORDER) renders as a collapsible
+  accordion row with a human-friendly label. Authored sections show their
+  markdown (rendered safely via the `| markdown` filter, which escapes untrusted
+  text first); sections with no authored content — including every section of a
+  custom parameter falling back to `_template.md` — render as a gentle
+  placeholder rather than an error.
+#}
+{% set ref_labels = {
+     "definition":  "What it is",
+     "measurement": "How it's measured",
+     "ideal_range": "Ideal range",
+     "too_high":    "Too high",
+     "too_low":     "Too low",
+     "signs":       "Signs to watch for",
+     "remedies":    "How to fix it",
+   } %}
+<div class="reef-reference__head">
+  <h3 class="reef-reference__title">
+    <span aria-hidden="true">📖</span> Reference &amp; action guide
+  </h3>
+  <p class="reef-muted reef-reference__lede">
+    What {{ parameter.display_name }} is, how to measure it, and what to do when it drifts.
+  </p>
+</div>
+
+<div class="reef-reference__sections">
+  {% for key, heading, text in content.ordered() %}
+  <details class="reef-reference__section{% if not content.is_present(key) %} is-placeholder{% endif %}"
+           {% if key == 'definition' %}open{% endif %}>
+    <summary class="reef-reference__label">{{ ref_labels.get(key, heading) }}</summary>
+    <div class="reef-reference__body">
+      {% if content.is_present(key) %}
+        {{ text | markdown }}
+      {% else %}
+        <p class="reef-reference__placeholder reef-muted">
+          Not documented yet — edit <code>content/{{ content.parameter_id }}.md</code> to fill this in.
+        </p>
+      {% endif %}
+    </div>
+  </details>
+  {% endfor %}
+</div>
