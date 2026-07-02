@@ -26,6 +26,12 @@
     </p>
   </header>
 
+  {% if error %}
+  <p class="reef-shelf__error" role="alert">
+    <span aria-hidden="true">{{ icon("warning") }}</span> {{ error }}
+  </p>
+  {% endif %}
+
   {% if tanks %}
   <ul class="reef-shelf__grid" role="list">
     {% for tank in tanks %}
@@ -36,18 +42,55 @@
         <span class="reef-tank-card__id">{{ tank.id }}</span>
         <span class="reef-tank-card__cue" aria-hidden="true">Open<span class="reef-tank-card__chevron">›</span></span>
       </a>
+      {# Delete lives OUTSIDE the card anchor (a button can't nest in a link).
+         Confirm guards this destructive action — it also drops the tank's
+         readings. #}
+      <form class="reef-tank-card__delete" method="post"
+            action="{{ url_for('delete_tank', tank_id=tank.id) }}"
+            onsubmit="return confirm('Delete “{{ tank.label }}” and all of its readings? This can’t be undone.');">
+        <button class="reef-tank-card__delete-btn" type="submit"
+                aria-label="Delete tank {{ tank.label }}"
+                title="Delete {{ tank.label }}">
+          {{ icon("trash") }}
+        </button>
+      </form>
     </li>
     {% endfor %}
   </ul>
   {% else %}
   <div class="reef-card reef-empty">
     <h3><span aria-hidden="true">{{ icon("shell") }}</span> No tanks configured yet</h3>
-    <p>fishy reads your tanks from <code>config/fishy.toml</code>. Add one to get started:</p>
-    <pre class="reef-code">[[tanks]]
-id = "reef-a"
-label = "Reef A"</pre>
-    <p class="reef-muted">Save the file and refresh this page — your tank will appear here.</p>
+    <p>Add your first tank with the form below — fishy stores it in
+       <code>config/fishy.toml</code>, so it stays plain-text and git-trackable.</p>
   </div>
   {% endif %}
+
+  {# Add-a-tank form (task: create/delete tanks). Always available — from here
+     the keeper builds the shelf without hand-editing config/fishy.toml. #}
+  <form class="reef-card reef-add-tank" method="post" action="{{ url_for('create_tank') }}">
+    <h3 class="reef-add-tank__title">
+      <span aria-hidden="true">{{ icon("plus") }}</span> Add a tank
+    </h3>
+    <div class="reef-add-tank__row">
+      <label class="reef-field reef-add-tank__name">
+        <span class="reef-field__label">Name</span>
+        <input class="reef-field__input" type="text" name="label"
+               value="{{ tank_form.label | default('', true) }}"
+               required aria-required="true" placeholder="e.g. Display Reef">
+      </label>
+      <label class="reef-field reef-add-tank__id">
+        <span class="reef-field__label">ID <span class="reef-muted">(optional)</span></span>
+        <input class="reef-field__input" type="text" name="id"
+               value="{{ tank_form.id | default('', true) }}"
+               inputmode="latin" placeholder="auto from name"
+               pattern="[a-z0-9][a-z0-9\-]*"
+               title="Lowercase letters, numbers and hyphens.">
+      </label>
+      <button class="reef-add-reading__save reef-add-tank__save" type="submit">Add tank</button>
+    </div>
+    <p class="reef-muted reef-add-tank__hint">
+      The ID rides in the tank's URL and its CSV rows — leave it blank to generate one from the name.
+    </p>
+  </form>
 </section>
 {% endblock %}

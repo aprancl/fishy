@@ -75,6 +75,15 @@
     <path d="M3.5 11c2.4-1.6 4.8 1.4 7.2 0 2.4-1.4 5.4 1.4 9.8-.4"/>
     <circle cx="15.5" cy="15" r="1"/>
     <path d="M8 19v-4.5"/>
+  {%- elif name == "plus" -%}
+    <path d="M12 5v14"/>
+    <path d="M5 12h14"/>
+  {%- elif name == "trash" -%}
+    <path d="M4 7h16"/>
+    <path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"/>
+    <path d="M6.5 7 7.4 19a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5L17.5 7"/>
+    <path d="M10 10.5v6"/>
+    <path d="M14 10.5v6"/>
   {%- else -%}
     {#- unknown glyph name: render nothing (fail-quiet). -#}
   {%- endif -%}

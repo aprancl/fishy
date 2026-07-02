@@ -2077,3 +2077,97 @@ body::before {
   body::before { background-size: 100% 34vh; }
   .reef-title { font-size: var(--reef-text-2xl); }
 }
+
+/* --------------------------------------------------------------------------
+   Create / delete tanks (add-tank form + per-card delete) — tank management
+   -------------------------------------------------------------------------- */
+
+/* The shelf card is a link; the delete control sits on top of it as a sibling.
+   Anchor its corner to the list item so it never nests inside the anchor. */
+.reef-shelf__item { position: relative; }
+
+.reef-tank-card__delete {
+  position: absolute;
+  top: var(--reef-space-2xs);
+  right: var(--reef-space-2xs);
+  margin: 0;
+  z-index: 2;   /* above the card's hover overlay (::after) */
+}
+.reef-tank-card__delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(178, 53, 36, 0.22);
+  background: var(--glass-fill-strong, rgba(255, 255, 255, 0.8));
+  color: var(--reef-muted);
+  font-size: 1rem;
+  line-height: 0;
+  cursor: pointer;
+  opacity: 0;   /* revealed on card hover/focus so the shelf stays calm */
+  transition: opacity var(--reef-dur-base) var(--reef-ease),
+    color var(--reef-dur-fast) var(--reef-ease),
+    background var(--reef-dur-fast) var(--reef-ease),
+    border-color var(--reef-dur-fast) var(--reef-ease);
+}
+/* Reveal the delete affordance when the card region is hovered or anything in
+   the item takes focus, and keep it visible while the button itself is focused. */
+.reef-shelf__item:hover .reef-tank-card__delete-btn,
+.reef-shelf__item:focus-within .reef-tank-card__delete-btn {
+  opacity: 1;
+}
+.reef-tank-card__delete-btn:hover,
+.reef-tank-card__delete-btn:focus-visible {
+  color: #fff;
+  background: var(--reef-coral, #ff6b5e);
+  border-color: var(--reef-coral, #ff6b5e);
+  outline: none;
+}
+.reef-tank-card__delete-btn:focus-visible {
+  outline: 3px solid var(--reef-focus);
+  outline-offset: 2px;
+}
+
+/* Add-a-tank panel: a glass card holding an inline name / id / submit row. */
+.reef-add-tank { margin-top: var(--reef-space-lg); }
+.reef-add-tank__title {
+  margin: 0 0 var(--reef-space-sm);
+  color: var(--reef-deep);
+  font-family: var(--reef-font-display);
+  display: flex;
+  align-items: center;
+  gap: var(--reef-space-2xs);
+}
+.reef-add-tank__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--reef-space-sm);
+}
+.reef-add-tank__name { flex: 2 1 12rem; margin-bottom: 0; }
+.reef-add-tank__id { flex: 1 1 8rem; margin-bottom: 0; }
+.reef-add-tank__save { flex: none; white-space: nowrap; }
+.reef-add-tank__hint { margin: var(--reef-space-sm) 0 0; font-size: var(--reef-text-xs); }
+
+/* Add-tank validation notice, sharing the app's warm alert treatment. */
+.reef-shelf__error {
+  display: flex;
+  align-items: center;
+  gap: var(--reef-space-2xs);
+  margin: 0 0 var(--reef-space-md);
+  padding: var(--reef-space-sm) var(--reef-space-md);
+  border-radius: var(--reef-radius-sm);
+  border: 1px solid rgba(178, 53, 36, 0.28);
+  background: rgba(255, 107, 94, 0.12);
+  color: var(--reef-coral-ink, #b23524);
+  font-weight: 600;
+}
+.reef-shelf__error .reef-icon { flex: none; }
+
+/* Motion-averse users get the delete control shown statically (no fade). */
+@media (prefers-reduced-motion: reduce) {
+  .reef-tank-card__delete-btn { opacity: 1; transition: none; }
+}

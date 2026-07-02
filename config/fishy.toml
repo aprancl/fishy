@@ -13,12 +13,8 @@
 # Tanks — each has a stable `id` (used as the CSV `tank` key) and a `label`.
 # --------------------------------------------------------------------------- #
 [[tanks]]
-id = "reef-a"
-label = "Reef A"
-
-[[tanks]]
-id = "frag-tank"
-label = "Frag Tank"
+id = "display-reef"
+label = "Display Reef"
 
 
 # --------------------------------------------------------------------------- #
@@ -92,6 +88,3 @@ units = ["°C", "°F"]
 # `[overrides.<tank-id>.<parameter-id>]` table with `min`/`max` (either bound
 # optional) is all that's needed.
 # --------------------------------------------------------------------------- #
-[overrides.frag-tank.alkalinity]
-min = 8.2
-max = 8.8

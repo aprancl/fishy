@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 
 from flask import Flask
 
-from .config import Config, load_config
+from .config import DEFAULT_CONFIG_PATH, Config, load_config
 from .storage import DEFAULT_READINGS_PATH, _format_value
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -438,6 +438,11 @@ def create_app(config: dict | None = None) -> Flask:
         APP_NAME="fishy",
         TAGLINE="a local-first reef water-parameter notebook",
         FISHY_READINGS_PATH=DEFAULT_READINGS_PATH,
+        # The TOML config path is injectable (like the readings path) so tests —
+        # and the create/delete-tank routes — can point at a tmp file instead of
+        # the repo's real config. It is also the source used to RELOAD config
+        # after a tank is created or deleted.
+        FISHY_CONFIG_PATH=DEFAULT_CONFIG_PATH,
     )
     if config:
         app.config.update(config)
@@ -446,7 +451,7 @@ def create_app(config: dict | None = None) -> Flask:
     # loader is a pure data layer; we surface it on app.config so views and
     # templates can scope to the active tank without re-parsing per request.
     if not isinstance(app.config.get("FISHY_CONFIG"), Config):
-        app.config["FISHY_CONFIG"] = load_config()
+        app.config["FISHY_CONFIG"] = load_config(app.config["FISHY_CONFIG_PATH"])
 
     # Render the (user-editable, untrusted) reference markdown safely in
     # templates via a `| markdown` filter. The renderer escapes first, so we
@@ -488,6 +493,19 @@ def _register_routes(app: Flask) -> None:
     def _readings_path():
         """The configured readings CSV path (injectable for tests)."""
         return app.config["FISHY_READINGS_PATH"]
+
+    def _config_path():
+        """The configured TOML config path (injectable for tests)."""
+        return app.config["FISHY_CONFIG_PATH"]
+
+    def _reload_config():
+        """Re-read the TOML config after a tank is created or deleted.
+
+        Config is otherwise loaded once at app construction and cached on
+        ``app.config["FISHY_CONFIG"]``; a create/delete mutates the file on disk,
+        so we reload from the same path to reflect the change immediately.
+        """
+        app.config["FISHY_CONFIG"] = load_config(_config_path())
 
     def _readings_for(tank_id: str, param_id: str):
         """Load readings for one tank+parameter, oldest first, from the CSV."""
@@ -571,11 +589,91 @@ def _register_routes(app: Flask) -> None:
         )
         return (html, status) if status != 200 else html
 
+    def _render_index(*, error=None, form=None, status=200):
+        """Render the tank shelf, optionally with an add-tank error/form state."""
+        config: Config = app.config["FISHY_CONFIG"]
+        html = render_template(
+            "index.html",
+            **_shell(tanks=config.tanks, error=error, tank_form=form or {}),
+        )
+        return (html, status) if status != 200 else html
+
     @app.route("/")
     def index():  # pragma: no cover - exercised via test client
         """The launch shelf: every configured tank, listed by label."""
+        return _render_index()
+
+    @app.route("/tanks", methods=["POST"])
+    def create_tank():  # pragma: no cover - exercised via test client
+        """Create a new tank from the shelf's add-tank form (Post/Redirect/Get).
+
+        The name is required; the id is either supplied explicitly or slugified
+        from the name. On any validation failure the shelf is re-rendered with a
+        friendly message and *nothing* is written. On success the new
+        ``[[tanks]]`` block is appended to the TOML config, the config is
+        reloaded, and we redirect straight into the new tank's view.
+        """
+        from . import tank_store
+
         config: Config = app.config["FISHY_CONFIG"]
-        return render_template("index.html", **_shell(tanks=config.tanks))
+        raw_label = (request.form.get("label") or "").strip()
+        raw_id = (request.form.get("id") or "").strip()
+        form = {"label": raw_label, "id": raw_id}
+
+        if not raw_label and not raw_id:
+            return _render_index(
+                error="Give your tank a name before adding it.", form=form, status=400
+            )
+
+        tank_id = raw_id or tank_store.slugify(raw_label)
+        if not tank_id:
+            return _render_index(
+                error=(
+                    f"“{raw_label}” has no letters or numbers to build an id from — "
+                    "add some, or set an explicit id."
+                ),
+                form=form,
+                status=400,
+            )
+        label = raw_label or tank_id
+
+        if config.tank(tank_id) is not None:
+            return _render_index(
+                error=f"A tank with id “{tank_id}” already exists.",
+                form=form,
+                status=400,
+            )
+
+        try:
+            tank_store.add_tank(_config_path(), tank_id, label)
+        except tank_store.TankStoreError as exc:
+            return _render_index(error=str(exc), form=form, status=400)
+
+        _reload_config()
+        return redirect(url_for("tank_view", tank_id=tank_id))
+
+    @app.route("/tank/<tank_id>/delete", methods=["POST"])
+    def delete_tank(tank_id: str):  # pragma: no cover - exercised via test client
+        """Delete a tank and all its readings (Post/Redirect/Get back to shelf).
+
+        Removes the tank's ``[[tanks]]`` block (and any per-tank overrides) from
+        the TOML config and purges its rows from the readings CSV, then reloads
+        config and returns to the shelf. An unknown tank id is a 404.
+        """
+        from . import tank_store
+
+        config: Config = app.config["FISHY_CONFIG"]
+        if config.tank(tank_id) is None:
+            abort(404, description=f"No tank configured with id '{tank_id}'.")
+
+        try:
+            tank_store.delete_tank(_config_path(), tank_id)
+        except tank_store.TankStoreError as exc:
+            return _render_index(error=str(exc), status=400)
+
+        storage.delete_tank_readings(tank_id, _readings_path())
+        _reload_config()
+        return redirect(url_for("index"))
 
     @app.route("/tank/<tank_id>")
     def tank_view(tank_id: str):  # pragma: no cover - exercised via test client

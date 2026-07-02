@@ -86,9 +86,10 @@ def test_no_tanks_state_explains_config(tmp_path):
     client, _ = _client(tmp_path, tanks=[])
     body = client.get("/").get_data(as_text=True)
     assert "No tanks configured" in body
-    # Actionable: points at the config file and shows a copy-paste snippet.
+    # Actionable: names where tanks are stored and offers the add-tank form so
+    # the first tank can be created without hand-editing config/fishy.toml.
     assert "config/fishy.toml" in body
-    assert "[[tanks]]" in body
+    assert "reef-add-tank" in body
     assert "reef-empty" in body
 
 

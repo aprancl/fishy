@@ -44,6 +44,7 @@ __all__ = [
     "load_readings",
     "append_reading",
     "append_readings",
+    "delete_tank_readings",
 ]
 
 #: Stable, documented column order for ``readings.csv`` (spec §7.4). The order
@@ -250,6 +251,41 @@ def append_readings(
             writer.writerow(reading.to_cells())
             count += 1
     return count
+
+
+def delete_tank_readings(
+    tank_id: str,
+    path: Path | str = DEFAULT_READINGS_PATH,
+) -> int:
+    """Remove every reading belonging to ``tank_id``; return the count removed.
+
+    Unlike normal writes (which are strictly append-only for clean git diffs),
+    deleting a tank is an inherently rewriting operation: the CSV is rewritten
+    with the header and every reading whose ``tank`` is not ``tank_id``. This is
+    the one place the file is rewritten rather than appended, and it only runs on
+    an explicit tank deletion.
+
+    A missing file, or a file with no rows for ``tank_id``, is a no-op returning
+    ``0`` — the file is left untouched so nothing is needlessly rewritten.
+    Malformed rows (which never parse into a :class:`Reading`) are not preserved
+    by the rewrite; a deletion is the natural moment to drop unreadable rows.
+    """
+    path = Path(path)
+    if not path.exists():
+        return 0
+
+    result = load_readings(path, emit_warnings=False)
+    kept = [reading for reading in result.readings if reading.tank != tank_id]
+    removed = len(result.readings) - len(kept)
+    if removed == 0:
+        return 0
+
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(COLUMNS)
+        for reading in kept:
+            writer.writerow(reading.to_cells())
+    return removed
 
 
 # --------------------------------------------------------------------------- #
