@@ -28,7 +28,43 @@
 <body>
   <header class="reef-header">
     <div class="reef-header__inner">
-      <span class="reef-logo" aria-hidden="true">{{ icon("fish") }}</span>
+      {#- Brand logo: a bespoke, full-colour tropical fish (the monochrome
+         line-icon set stays currentColor for inline uses; the logo is a
+         signature accent, so it gets its own vivid reef palette). Decorative —
+         the "fishy" wordmark beside it carries the name. -#}
+      <span class="reef-logo" aria-hidden="true">
+        <svg class="reef-icon reef-logo__mark" viewBox="0 0 64 64" data-icon="fish"
+             fill="none" focusable="false" aria-hidden="true">
+          <defs>
+            <linearGradient id="reef-logo-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ff9a3c"/>
+              <stop offset="1" stop-color="#f4661f"/>
+            </linearGradient>
+            <clipPath id="reef-logo-body">
+              <path d="M24 32 C24 20 32 15 44 15 C52 15 57.5 23 58 32 C57.5 41 52 49 44 49 C32 49 24 44 24 32 Z"/>
+            </clipPath>
+          </defs>
+          <!-- tail fin -->
+          <path d="M25 32 L7 19 C10.5 27 10.5 37 7 45 Z" fill="url(#reef-logo-grad)" stroke="#0b2f3a" stroke-width="1.7" stroke-linejoin="round"/>
+          <!-- dorsal fin -->
+          <path d="M27 18 C33 8 46 8 51 18 C43 15 34 15 27 18 Z" fill="url(#reef-logo-grad)" stroke="#0b2f3a" stroke-width="1.7" stroke-linejoin="round"/>
+          <!-- pelvic / anal fin -->
+          <path d="M29 47 C33 55 42 55 45 48 C39 50 34 50 29 47 Z" fill="url(#reef-logo-grad)" stroke="#0b2f3a" stroke-width="1.7" stroke-linejoin="round"/>
+          <!-- body -->
+          <path d="M24 32 C24 20 32 15 44 15 C52 15 57.5 23 58 32 C57.5 41 52 49 44 49 C32 49 24 44 24 32 Z" fill="url(#reef-logo-grad)" stroke="#0b2f3a" stroke-width="1.9" stroke-linejoin="round"/>
+          <!-- three white bands, clipped to the body silhouette -->
+          <g clip-path="url(#reef-logo-body)">
+            <path d="M25 11 C22.5 24 22.5 40 25 53 L29.5 53 C27 40 27 24 29.5 11 Z" fill="#fdf6ec" stroke="#0b2f3a" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M35 11 C32 22 32 42 35 53 L41 53 C38.5 42 38.5 22 41 11 Z" fill="#fdf6ec" stroke="#0b2f3a" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M45 13 C43 24 43 40 45 51 L50 51 C48 40 48 24 50 13 Z" fill="#fdf6ec" stroke="#0b2f3a" stroke-width="1.5" stroke-linejoin="round"/>
+          </g>
+          <!-- eye -->
+          <circle cx="52" cy="27" r="3.3" fill="#fdf6ec" stroke="#0b2f3a" stroke-width="1.3"/>
+          <circle cx="52.4" cy="27" r="1.6" fill="#0b2f3a"/>
+          <!-- mouth -->
+          <path d="M57.6 33 q1.6 1.4 0.4 3.2" fill="none" stroke="#0b2f3a" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>
       <div>
         <h1 class="reef-title">{{ app_name | default('fishy') }}</h1>
         <p class="reef-tagline">{{ tagline | default('reef water-parameter notebook') }}</p>

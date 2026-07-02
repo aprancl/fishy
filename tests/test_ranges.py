@@ -291,14 +291,35 @@ def test_override_reflected_in_latest_value_badge(tmp_path):
     assert contract["points"][-1]["in_range"] is False
 
 
-def test_shipped_config_demonstrates_per_tank_override(tmp_path):
-    # The shipped config must make precedence demonstrable: frag-tank tightens
+def test_config_file_supports_per_tank_override(tmp_path):
+    # A config file on disk must make precedence demonstrable: frag-tank tightens
     # alkalinity while reef-a keeps the default — and it introduces no warnings.
-    conf = load_config()  # real config/fishy.toml
+    # (Uses a controlled tmp config rather than config/fishy.toml, which is the
+    # user's editable data file and may hold any tanks.)
+    text = """\
+[[tanks]]
+id = "reef-a"
+label = "Reef A"
+
+[[tanks]]
+id = "frag-tank"
+label = "Frag Tank"
+
+[[parameters]]
+id = "alkalinity"
+display_name = "Alkalinity"
+units = ["dKH"]
+target_range = { min = 8.0, max = 9.0 }
+
+[overrides.frag-tank.alkalinity]
+min = 8.2
+max = 8.8
+"""
+    conf = load_config(_write(tmp_path / "c.toml", text))
     assert conf.warnings == []
     alk = conf.parameter("alkalinity")
     assert alk is not None
     frag = alk.range_for_tank("frag-tank")
     reef = alk.range_for_tank("reef-a")
-    assert frag != reef, "shipped config should demonstrate a per-tank override"
+    assert frag != reef, "config should demonstrate a per-tank override"
     assert frag.min >= reef.min and frag.max <= reef.max  # a tighter band

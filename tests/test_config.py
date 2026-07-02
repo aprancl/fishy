@@ -24,7 +24,17 @@ from fishy.config import (
     parse_content,
 )
 
-BUILTIN_PARAM_IDS = {"salinity", "alkalinity", "calcium", "magnesium", "phosphate"}
+BUILTIN_PARAM_IDS = {
+    "salinity",
+    "ph",
+    "ammonia",
+    "nitrite",
+    "nitrate",
+    "alkalinity",
+    "calcium",
+    "magnesium",
+    "phosphate",
+}
 
 
 # --------------------------------------------------------------------------- #

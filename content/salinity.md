@@ -1,4 +1,4 @@
-# Salinity / Specific Gravity
+# Salinity
 
 ## Definition
 

@@ -1227,17 +1227,6 @@ summary:focus-visible,
    opacity so it reads as faint texture, not a foreground graphic. */
 .reef-shelf { position: relative; }
 .reef-shelf > * { position: relative; z-index: 1; }
-.reef-shelf__motif {
-  position: absolute;
-  top: 0;
-  right: var(--motif-coral-inset);
-  z-index: 0;
-  font-size: var(--motif-coral-size);   /* the 1em icon() scales to this */
-  line-height: 0;
-  color: var(--reef-teal);
-  opacity: calc(var(--motif-accent-opacity) * 0.1);
-  pointer-events: none;
-}
 
 /* --- Section divider: a lone wave-form ornament marking a boundary ---------
    A single centered wave glyph, used at most once per screen to punctuate a
@@ -1256,10 +1245,6 @@ summary:focus-visible,
 /* --- Narrow screens: shrink the hero coral, soften the divider ------------
    Keep accents from crowding a small viewport (spec §5.3 restraint / §6). */
 @media (max-width: 640px) {
-  .reef-shelf__motif {
-    font-size: calc(var(--motif-coral-size) * 0.65);
-    opacity: calc(var(--motif-accent-opacity) * 0.07);
-  }
   .reef-wave-divider { font-size: 2rem; }
 }
 
@@ -1411,24 +1396,16 @@ summary:focus-visible,
    these refinements win the cascade at equal specificity.
    ========================================================================== */
 
-/* --- Header: seat the logo in a frosted badge, sharpen the title block ----
-   The bare glyph now sits in a circular frosted-glass badge, giving the
-   masthead a clear focal anchor and echoing the glass nav pills. The tagline
-   drops to a spaced micro-label so the title reads as the dominant line. */
+/* --- Header: the clownfish mark rides bare on the banner ------------------
+   No badge or frosted plate — the full-colour clownfish is the masthead's
+   signature accent and sits directly on the deep-teal gradient. Sized up so it
+   reads as a proper logo. The tagline drops to a spaced micro-label so the
+   title reads as the dominant line. */
 .reef-logo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  font-size: 1.85rem;
-  border-radius: var(--reef-pill);
-  background: var(--glass-fill);
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
-  backdrop-filter: blur(var(--glass-blur-sm));
-  border: var(--glass-border);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35),
-              0 3px 10px rgba(0, 0, 0, 0.2);
+  font-size: 3.1rem;
 }
 .reef-tagline {
   margin-top: var(--reef-space-3xs);
@@ -1505,12 +1482,10 @@ summary:focus-visible,
   line-height: var(--reef-leading-normal);
 }
 
-/* --- Narrow screens: shrink the logo badge, keep the pill rows usable ------ */
+/* --- Narrow screens: shrink the logo mark, keep the pill rows usable ------- */
 @media (max-width: 640px) {
   .reef-logo {
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1.5rem;
+    font-size: 2.4rem;
   }
 }
 
@@ -2170,4 +2145,13 @@ body::before {
 /* Motion-averse users get the delete control shown statically (no fade). */
 @media (prefers-reduced-motion: reduce) {
   .reef-tank-card__delete-btn { opacity: 1; transition: none; }
+}
+
+/* --------------------------------------------------------------------------
+   Brand logo mark — full-colour tropical fish (header signature accent)
+   -------------------------------------------------------------------------- */
+.reef-logo__mark {
+  /* Lift the vivid mark off the deep header gradient with a soft shadow. */
+  filter: drop-shadow(0 2px 3px rgba(3, 22, 33, 0.35));
+  overflow: visible;
 }

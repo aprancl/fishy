@@ -5,15 +5,9 @@
 
 {% block content %}
 <section class="reef-shelf">
-  {# Signature accent (task #5, spec §5.3): a single oversized coral silhouette
-     drifting behind the shelf. Decorative + aria-hidden, pushed behind the tank
-     cards via CSS, and whisper-low opacity so it never competes with content. #}
-  <span class="reef-shelf__motif" aria-hidden="true">{{ icon("coral") }}</span>
-
   {# Hero treatment (task #8, spec §5.4): the first-impression band. A coral
      eyebrow leads into the oversized title (which keeps its #5 coral flourish +
-     underline) and a lead line, framing the landing as the app's focal point.
-     Built AROUND the existing coral motif silhouette above — never replacing it. #}
+     underline) and a lead line, framing the landing as the app's focal point. #}
   <header class="reef-shelf__hero">
     <p class="reef-shelf__eyebrow">
       <span class="reef-shelf__eyebrow-mark" aria-hidden="true">{{ icon("coral") }}</span>

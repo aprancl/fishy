@@ -46,9 +46,21 @@ def test_shelf_links_into_each_tank_view(multi_tank_client):
     assert "/tank/frag-tank" in body
 
 
-def test_default_app_loads_shipped_tanks():
-    """create_app() with no injected config loads config/fishy.toml (2 tanks)."""
-    client = create_app({"TESTING": True}).test_client()
+def test_factory_loads_tanks_from_config_file(tmp_path):
+    """create_app() with no injected Config loads tanks from FISHY_CONFIG_PATH.
+
+    Points at a controlled tmp config rather than the repo's config/fishy.toml,
+    which is the user's editable data file (tanks can be added/deleted at will).
+    """
+    cfg = tmp_path / "fishy.toml"
+    cfg.write_text(
+        '[[tanks]]\nid = "reef-a"\nlabel = "Reef A"\n\n'
+        '[[tanks]]\nid = "frag-tank"\nlabel = "Frag Tank"\n',
+        encoding="utf-8",
+    )
+    client = create_app(
+        {"TESTING": True, "FISHY_CONFIG_PATH": str(cfg)}
+    ).test_client()
     body = client.get("/").get_data(as_text=True)
     assert "Reef A" in body
     assert "Frag Tank" in body

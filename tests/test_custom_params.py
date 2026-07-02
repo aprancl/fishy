@@ -249,11 +249,25 @@ def test_shipped_config_ships_example_custom_parameter():
     assert conf.warnings == []  # the example must not introduce config warnings
 
 
-def test_shipped_custom_parameter_flows_through_ui_end_to_end(tmp_path):
-    """E2E: with the real config, add a reading for the custom param and see it."""
-    # No injected FISHY_CONFIG → loads the real config/fishy.toml (temperature).
+def test_custom_parameter_flows_through_ui_end_to_end(tmp_path):
+    """E2E: loading config from disk, add a reading for a custom param and see it."""
+    # Loads config from a controlled FISHY_CONFIG_PATH (a range-less "temperature"
+    # custom param on a real tank) rather than the user's editable config/fishy.toml.
+    cfg = tmp_path / "fishy.toml"
+    cfg.write_text(
+        '[[tanks]]\nid = "reef-a"\nlabel = "Reef A"\n\n'
+        '[[parameters]]\nid = "temperature"\n'
+        'display_name = "Temperature"\nunits = ["°C", "°F"]\n',
+        encoding="utf-8",
+    )
     readings_path = tmp_path / "readings.csv"
-    app = create_app({"TESTING": True, "FISHY_READINGS_PATH": readings_path})
+    app = create_app(
+        {
+            "TESTING": True,
+            "FISHY_CONFIG_PATH": str(cfg),
+            "FISHY_READINGS_PATH": readings_path,
+        }
+    )
     client = app.test_client()
 
     # The temperature tab is present on a real shipped tank.

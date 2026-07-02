@@ -28,10 +28,37 @@ label = "Display Reef"
 # --------------------------------------------------------------------------- #
 [[parameters]]
 id = "salinity"
-display_name = "Salinity / Specific Gravity"
+display_name = "Salinity"
 units = ["sg", "ppt"]
 builtin = true
 target_range = { min = 1.024, max = 1.026 }
+
+[[parameters]]
+id = "ph"
+display_name = "pH"
+builtin = true
+target_range = { min = 8.0, max = 8.4 }
+
+[[parameters]]
+id = "ammonia"
+display_name = "Ammonia"
+units = ["ppm"]
+builtin = true
+target_range = { min = 0, max = 0.02 }
+
+[[parameters]]
+id = "nitrite"
+display_name = "Nitrite"
+units = ["ppm"]
+builtin = true
+target_range = { min = 0, max = 0.1 }
+
+[[parameters]]
+id = "nitrate"
+display_name = "Nitrate"
+units = ["ppm"]
+builtin = true
+target_range = { min = 1, max = 10 }
 
 [[parameters]]
 id = "alkalinity"
