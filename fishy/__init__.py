@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING
 from flask import Flask
 
 from .config import DEFAULT_CONFIG_PATH, Config, load_config
-from .storage import DEFAULT_READINGS_PATH, _format_value
+from .storage import DEFAULT_DATA_DIR, _format_value
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from collections.abc import Iterable
@@ -437,11 +437,14 @@ def create_app(config: dict | None = None) -> Flask:
     app.config.update(
         APP_NAME="fishy",
         TAGLINE="a local-first reef water-parameter notebook",
-        FISHY_READINGS_PATH=DEFAULT_READINGS_PATH,
-        # The TOML config path is injectable (like the readings path) so tests —
-        # and the create/delete-tank routes — can point at a tmp file instead of
-        # the repo's real config. It is also the source used to RELOAD config
-        # after a tank is created or deleted.
+        # Readings live under this data directory, one CSV per tank at
+        # ``<FISHY_DATA_DIR>/<tank_id>/readings.csv``. Injectable so tests point
+        # it at a tmp dir instead of the repo's real data.
+        FISHY_DATA_DIR=DEFAULT_DATA_DIR,
+        # The TOML config path is injectable (like the data dir) so tests — and
+        # the create/delete-tank routes — can point at a tmp file instead of the
+        # repo's real config. It is also the source used to RELOAD config after a
+        # tank is created or deleted.
         FISHY_CONFIG_PATH=DEFAULT_CONFIG_PATH,
     )
     if config:
@@ -490,9 +493,13 @@ def _register_routes(app: Flask) -> None:
             **extra,
         }
 
-    def _readings_path():
-        """The configured readings CSV path (injectable for tests)."""
-        return app.config["FISHY_READINGS_PATH"]
+    def _data_dir():
+        """The configured data directory (injectable for tests)."""
+        return app.config["FISHY_DATA_DIR"]
+
+    def _readings_path_for(tank_id: str):
+        """Resolve one tank's readings CSV: ``<data_dir>/<tank_id>/readings.csv``."""
+        return storage.readings_path_for(_data_dir(), tank_id)
 
     def _config_path():
         """The configured TOML config path (injectable for tests)."""
@@ -508,16 +515,16 @@ def _register_routes(app: Flask) -> None:
         app.config["FISHY_CONFIG"] = load_config(_config_path())
 
     def _readings_for(tank_id: str, param_id: str):
-        """Load readings for one tank+parameter, oldest first, from the CSV."""
-        result = storage.load_readings(_readings_path(), emit_warnings=False)
+        """Load readings for one tank+parameter, oldest first, from its CSV."""
+        result = storage.load_readings(_readings_path_for(tank_id), emit_warnings=False)
         return [
             r
             for r in result.readings
             if r.tank == tank_id and r.parameter == param_id
         ]
 
-    def _load_warnings():
-        """Non-fatal warnings for malformed/skipped rows in the readings CSV.
+    def _load_warnings(tank_id: str):
+        """Non-fatal warnings for malformed/skipped rows in a tank's readings CSV.
 
         The storage layer (task #2) tolerates malformed rows: it skips each one
         with a clear, row-identifying warning (``"row N: skipped — reason"``)
@@ -531,7 +538,9 @@ def _register_routes(app: Flask) -> None:
         notice shows. This is the ONE place the app reads ``LoadResult.warnings``,
         keeping the "surface skipped rows" policy centralized (task #15).
         """
-        return storage.load_readings(_readings_path(), emit_warnings=False).warnings
+        return storage.load_readings(
+            _readings_path_for(tank_id), emit_warnings=False
+        ).warnings
 
     def _unknown_param_ids(tank_id: str) -> list[str]:
         """Distinct parameter ids logged for a tank but absent from config.
@@ -543,7 +552,7 @@ def _register_routes(app: Flask) -> None:
         """
         config: Config = app.config["FISHY_CONFIG"]
         known = config.parameters_by_id
-        result = storage.load_readings(_readings_path(), emit_warnings=False)
+        result = storage.load_readings(_readings_path_for(tank_id), emit_warnings=False)
         seen: list[str] = []
         for reading in result.readings:
             if (
@@ -584,7 +593,7 @@ def _register_routes(app: Flask) -> None:
                 form=form or {},
                 # Non-fatal malformed-row notice (task #15): valid readings
                 # above still render; this lists any rows storage had to skip.
-                load_warnings=_load_warnings(),
+                load_warnings=_load_warnings(active_tank.id),
             ),
         )
         return (html, status) if status != 200 else html
@@ -657,8 +666,8 @@ def _register_routes(app: Flask) -> None:
         """Delete a tank and all its readings (Post/Redirect/Get back to shelf).
 
         Removes the tank's ``[[tanks]]`` block (and any per-tank overrides) from
-        the TOML config and purges its rows from the readings CSV, then reloads
-        config and returns to the shelf. An unknown tank id is a 404.
+        the TOML config and deletes its data directory (``<data_dir>/<tank_id>/``),
+        then reloads config and returns to the shelf. An unknown tank id is a 404.
         """
         from . import tank_store
 
@@ -671,7 +680,7 @@ def _register_routes(app: Flask) -> None:
         except tank_store.TankStoreError as exc:
             return _render_index(error=str(exc), status=400)
 
-        storage.delete_tank_readings(tank_id, _readings_path())
+        storage.delete_tank_data(tank_id, _data_dir())
         _reload_config()
         return redirect(url_for("index"))
 
@@ -759,7 +768,7 @@ def _register_routes(app: Flask) -> None:
             unit=parameter.default_unit or "",
             note=note,
         )
-        storage.append_reading(reading, _readings_path())
+        storage.append_reading(reading, _readings_path_for(active_tank.id))
         return redirect(
             url_for("parameter_view", tank_id=active_tank.id, param_id=parameter.id)
         )
@@ -794,8 +803,10 @@ def _register_routes(app: Flask) -> None:
         # Full reading history for the active tank (task #13): the bottom of the
         # page lists every reading, most-recent-first, as its own tidy row —
         # including any archived/unknown-parameter rows (they render without a
-        # tab elsewhere but must not be dropped here). Loaded once from the CSV.
-        load_result = storage.load_readings(_readings_path(), emit_warnings=False)
+        # tab elsewhere but must not be dropped here). Loaded from the tank's CSV.
+        load_result = storage.load_readings(
+            _readings_path_for(active_tank.id), emit_warnings=False
+        )
         all_readings = load_result.readings
         history = _history_rows(all_readings, config, active_tank.id)
         return render_template(

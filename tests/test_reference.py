@@ -40,7 +40,7 @@ def _app(tmp_path, *, content=None, param_id="salinity", display="Salinity"):
         {
             "TESTING": True,
             "FISHY_CONFIG": config,
-            "FISHY_READINGS_PATH": tmp_path / "readings.csv",
+            "FISHY_DATA_DIR": tmp_path,
         }
     )
 

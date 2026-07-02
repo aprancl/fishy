@@ -32,7 +32,7 @@ import datetime as dt
 
 from fishy import _chart_series, _parameter_stats, create_app
 from fishy.config import Config, Parameter, Tank, TargetRange, load_config
-from fishy.storage import Reading, append_reading, load_readings
+from fishy.storage import Reading, append_reading, load_readings, readings_path_for
 
 
 def _client(tmp_path, *, tanks=None, parameters=None):
@@ -41,12 +41,13 @@ def _client(tmp_path, *, tanks=None, parameters=None):
     if parameters is None:
         parameters = [Parameter(id="salinity", display_name="Salinity", units=("ppt",))]
     config = Config(tanks=tanks, parameters=parameters)
-    readings_path = tmp_path / "readings.csv"
+    # These tests all use the reef-a tank, so point at its per-tank CSV.
+    readings_path = readings_path_for(tmp_path, "reef-a")
     app = create_app(
         {
             "TESTING": True,
             "FISHY_CONFIG": config,
-            "FISHY_READINGS_PATH": readings_path,
+            "FISHY_DATA_DIR": tmp_path,
         }
     )
     return app.test_client(), readings_path
@@ -260,12 +261,11 @@ def test_custom_parameter_flows_through_ui_end_to_end(tmp_path):
         'display_name = "Temperature"\nunits = ["°C", "°F"]\n',
         encoding="utf-8",
     )
-    readings_path = tmp_path / "readings.csv"
     app = create_app(
         {
             "TESTING": True,
             "FISHY_CONFIG_PATH": str(cfg),
-            "FISHY_READINGS_PATH": readings_path,
+            "FISHY_DATA_DIR": tmp_path,
         }
     )
     client = app.test_client()

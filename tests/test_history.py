@@ -23,7 +23,16 @@ import datetime as dt
 
 from fishy import _history_rows, create_app
 from fishy.config import Config, Parameter, Tank, TargetRange
-from fishy.storage import Reading, append_reading
+from fishy.storage import Reading, append_reading as _append_file, readings_path_for
+
+
+def append_reading(reading, path):
+    """Seed one reading into its per-tank CSV (``<path>/<tank>/readings.csv``).
+
+    ``path`` is the data dir (kept named ``path`` so existing positional and
+    ``path=`` call sites keep working); routing is by the reading's tank.
+    """
+    _append_file(reading, readings_path_for(path, reading.tank))
 
 
 def _reading(param, value, day, tank="reef-a", unit="", note=""):
@@ -63,12 +72,12 @@ def _config(*, tanks=None, parameters=None):
 
 def _client(tmp_path, *, tanks=None, parameters=None):
     config = _config(tanks=tanks, parameters=parameters)
-    readings_path = tmp_path / "readings.csv"
+    readings_path = tmp_path  # data dir; append_reading() routes per-tank
     app = create_app(
         {
             "TESTING": True,
             "FISHY_CONFIG": config,
-            "FISHY_READINGS_PATH": readings_path,
+            "FISHY_DATA_DIR": readings_path,
         }
     )
     return app.test_client(), readings_path

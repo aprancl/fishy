@@ -9,8 +9,9 @@ Layering mirrors the rest of the suite:
                   refreshes to include it; invalid input writes nothing.
   * E2E-ish     — log a reading and see it appear on the parameter page.
 
-The readings CSV path is injected via ``FISHY_READINGS_PATH`` so tests write to
-a pytest tmp file and never touch the repo's real ``data/readings.csv``.
+The data directory is injected via ``FISHY_DATA_DIR`` so tests write to a pytest
+tmp dir (one CSV per tank at ``<data_dir>/<tank_id>/readings.csv``) and never
+touch the repo's real ``data/``.
 """
 
 from __future__ import annotations
@@ -21,22 +22,26 @@ import pytest
 
 from fishy import create_app
 from fishy.config import Config, Parameter, Tank
-from fishy.storage import load_readings
+from fishy.storage import load_readings, readings_path_for
 
 
 def _make_client(tmp_path, *, tanks=None, parameters=None):
-    """Build a test client with an injected config and a tmp readings path."""
+    """Build a test client with an injected config and a tmp data dir.
+
+    These tests only exercise the ``reef-a`` tank, so ``readings_path`` points
+    directly at that tank's per-tank CSV (``<data_dir>/reef-a/readings.csv``).
+    """
     tanks = tanks or [Tank(id="reef-a", label="Reef A")]
     parameters = parameters or [
         Parameter(id="salinity", display_name="Salinity", units=("ppt",), builtin=True)
     ]
     config = Config(tanks=tanks, parameters=parameters)
-    readings_path = tmp_path / "readings.csv"
+    readings_path = readings_path_for(tmp_path, "reef-a")
     app = create_app(
         {
             "TESTING": True,
             "FISHY_CONFIG": config,
-            "FISHY_READINGS_PATH": readings_path,
+            "FISHY_DATA_DIR": tmp_path,
         }
     )
     return app.test_client(), readings_path

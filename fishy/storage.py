@@ -1,10 +1,20 @@
 """CSV persistence layer for fishy readings (spec §5.8 / §7.4).
 
 This module is the single source of truth for *reading state*. Readings are
-stored in a plain-text, git-trackable CSV in **long/tidy** form — one row per
+stored in plain-text, git-trackable CSVs in **long/tidy** form — one row per
 reading — with a stable, documented column order::
 
     tank, parameter, date, value, unit, note
+
+**Storage layout — one CSV per tank.** Each tank keeps its readings in its own
+file under a data directory, keyed by the tank's id::
+
+    data/<tank_id>/readings.csv
+
+Resolve a tank's file with :func:`readings_path_for`. The low-level primitives
+below (:func:`load_readings`, :func:`append_reading`, …) each operate on a single
+CSV file — the caller passes the resolved per-tank path — so they stay simple and
+unit-testable; the per-tank routing lives entirely in :func:`readings_path_for`.
 
 Design goals (spec §7.5):
 
@@ -28,6 +38,7 @@ from __future__ import annotations
 
 import csv
 import datetime as _dt
+import shutil
 import warnings
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
@@ -37,6 +48,7 @@ __all__ = [
     "COLUMNS",
     "DEFAULT_DATA_DIR",
     "DEFAULT_READINGS_PATH",
+    "READINGS_FILENAME",
     "Reading",
     "LoadResult",
     "ReadingError",
@@ -44,17 +56,40 @@ __all__ = [
     "load_readings",
     "append_reading",
     "append_readings",
-    "delete_tank_readings",
+    "readings_path_for",
+    "delete_tank_data",
 ]
 
 #: Stable, documented column order for ``readings.csv`` (spec §7.4). The order
 #: is load-bearing for clean git diffs — do not reorder without updating the spec.
 COLUMNS: tuple[str, ...] = ("tank", "parameter", "date", "value", "unit", "note")
 
-#: Default on-disk location for the readings CSV. The directory is created on
-#: first write. The file itself is meant to be committed to git by the user.
-DEFAULT_DATA_DIR: Path = Path("data")
-DEFAULT_READINGS_PATH: Path = DEFAULT_DATA_DIR / "readings.csv"
+#: Root directory holding one subdirectory per tank. Created on first write and
+#: meant to be committed to git by the user. Anchored to the repo root (the
+#: package's parent) — NOT the current working directory — so the app finds its
+#: data no matter where it is launched from, mirroring how :mod:`fishy.config`
+#: anchors ``DEFAULT_CONFIG_PATH``/``DEFAULT_CONTENT_DIR``. (Tests override this
+#: via ``FISHY_DATA_DIR``.)
+_REPO_ROOT: Path = Path(__file__).resolve().parent.parent
+DEFAULT_DATA_DIR: Path = _REPO_ROOT / "data"
+
+#: Filename of the readings CSV inside each tank's directory.
+READINGS_FILENAME: str = "readings.csv"
+
+#: Fallback single-file path used only as the default argument of the low-level
+#: primitives when a caller omits an explicit path. The application never relies
+#: on this — it always resolves a per-tank file via :func:`readings_path_for`.
+DEFAULT_READINGS_PATH: Path = DEFAULT_DATA_DIR / READINGS_FILENAME
+
+
+def readings_path_for(data_dir: Path | str, tank_id: str) -> Path:
+    """Return a tank's readings CSV path: ``<data_dir>/<tank_id>/readings.csv``.
+
+    The single seam that maps a tank id to its on-disk file. The parent
+    directory is created lazily on first write (see :func:`ensure_file`), so
+    this is a pure path computation with no filesystem side effects.
+    """
+    return Path(data_dir) / tank_id / READINGS_FILENAME
 
 
 class ReadingError(ValueError):
@@ -253,39 +288,22 @@ def append_readings(
     return count
 
 
-def delete_tank_readings(
+def delete_tank_data(
     tank_id: str,
-    path: Path | str = DEFAULT_READINGS_PATH,
-) -> int:
-    """Remove every reading belonging to ``tank_id``; return the count removed.
+    data_dir: Path | str = DEFAULT_DATA_DIR,
+) -> bool:
+    """Delete a tank's entire data directory (``<data_dir>/<tank_id>/``).
 
-    Unlike normal writes (which are strictly append-only for clean git diffs),
-    deleting a tank is an inherently rewriting operation: the CSV is rewritten
-    with the header and every reading whose ``tank`` is not ``tank_id``. This is
-    the one place the file is rewritten rather than appended, and it only runs on
-    an explicit tank deletion.
-
-    A missing file, or a file with no rows for ``tank_id``, is a no-op returning
-    ``0`` — the file is left untouched so nothing is needlessly rewritten.
-    Malformed rows (which never parse into a :class:`Reading`) are not preserved
-    by the rewrite; a deletion is the natural moment to drop unreadable rows.
+    With one CSV per tank, removing a tank is simply removing its directory —
+    no rewriting of other tanks' files is involved, and nothing else can be
+    affected. Returns ``True`` if a directory existed and was removed, ``False``
+    if there was nothing to delete (a tank that was never logged).
     """
-    path = Path(path)
-    if not path.exists():
-        return 0
-
-    result = load_readings(path, emit_warnings=False)
-    kept = [reading for reading in result.readings if reading.tank != tank_id]
-    removed = len(result.readings) - len(kept)
-    if removed == 0:
-        return 0
-
-    with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.writer(handle)
-        writer.writerow(COLUMNS)
-        for reading in kept:
-            writer.writerow(reading.to_cells())
-    return removed
+    tank_dir = Path(data_dir) / tank_id
+    if not tank_dir.exists():
+        return False
+    shutil.rmtree(tank_dir)
+    return True
 
 
 # --------------------------------------------------------------------------- #

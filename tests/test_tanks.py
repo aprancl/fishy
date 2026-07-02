@@ -2,10 +2,10 @@
 
 Two layers, mirroring the project's other test files:
 
-  * Unit  — :mod:`fishy.tank_store` and :func:`fishy.storage.delete_tank_readings`
+  * Unit  — :mod:`fishy.tank_store` and :func:`fishy.storage.delete_tank_data`
             exercised directly as pure data layers (no Flask), so the
-            comment-preserving TOML edits and the CSV purge are verified in
-            isolation.
+            comment-preserving TOML edits and the per-tank directory removal are
+            verified in isolation.
   * Integration — the ``POST /tanks`` and ``POST /tank/<id>/delete`` routes via
             the Flask test client, pointed at a tmp config + tmp CSV so nothing
             touches the repo's real data.
@@ -19,7 +19,13 @@ import pytest
 
 from fishy import create_app
 from fishy.config import load_config
-from fishy.storage import Reading, append_readings, delete_tank_readings, load_readings
+from fishy.storage import (
+    Reading,
+    append_readings,
+    delete_tank_data,
+    load_readings,
+    readings_path_for,
+)
 from fishy import tank_store
 
 
@@ -65,15 +71,15 @@ def client(tmp_path, config_file):
     FISHY_CONFIG is intentionally NOT injected so the app loads (and reloads)
     from the tmp TOML — exercising the real create/delete write path.
     """
-    readings = tmp_path / "readings.csv"
+    data_dir = tmp_path
     app = create_app(
         {
             "TESTING": True,
             "FISHY_CONFIG_PATH": str(config_file),
-            "FISHY_READINGS_PATH": str(readings),
+            "FISHY_DATA_DIR": str(data_dir),
         }
     )
-    return app.test_client(), readings
+    return app.test_client(), data_dir
 
 
 # --------------------------------------------------------------------------- #
@@ -184,27 +190,30 @@ def test_delete_tank_unknown_raises(config_file):
 
 
 # --------------------------------------------------------------------------- #
-# Unit: delete_tank_readings (storage)
+# Unit: delete_tank_data (storage)
 # --------------------------------------------------------------------------- #
-def test_delete_tank_readings_purges_only_that_tank(tmp_path):
-    path = tmp_path / "readings.csv"
+def test_delete_tank_data_removes_only_that_tank(tmp_path):
     append_readings(
         [
             Reading("reef-a", "alkalinity", _dt.date(2026, 6, 1), 8.4, "dKH"),
-            Reading("frag-tank", "alkalinity", _dt.date(2026, 6, 1), 8.5, "dKH"),
             Reading("reef-a", "alkalinity", _dt.date(2026, 6, 2), 8.3, "dKH"),
         ],
-        path,
+        readings_path_for(tmp_path, "reef-a"),
     )
-    removed = delete_tank_readings("reef-a", path)
-    assert removed == 2
+    append_readings(
+        [Reading("frag-tank", "alkalinity", _dt.date(2026, 6, 1), 8.5, "dKH")],
+        readings_path_for(tmp_path, "frag-tank"),
+    )
 
-    remaining = load_readings(path).readings
+    assert delete_tank_data("reef-a", tmp_path) is True
+    # reef-a's whole directory is gone; frag-tank's file is untouched.
+    assert not readings_path_for(tmp_path, "reef-a").exists()
+    remaining = load_readings(readings_path_for(tmp_path, "frag-tank")).readings
     assert [r.tank for r in remaining] == ["frag-tank"]
 
 
-def test_delete_tank_readings_missing_file_is_noop(tmp_path):
-    assert delete_tank_readings("reef-a", tmp_path / "nope.csv") == 0
+def test_delete_tank_data_missing_dir_is_noop(tmp_path):
+    assert delete_tank_data("reef-a", tmp_path) is False
 
 
 # --------------------------------------------------------------------------- #
@@ -247,13 +256,14 @@ def test_create_tank_route_rejects_duplicate(client):
 # Integration: delete route
 # --------------------------------------------------------------------------- #
 def test_delete_tank_route_removes_tank_and_readings(client):
-    test_client, readings_path = client
+    test_client, data_dir = client
     append_readings(
-        [
-            Reading("reef-a", "alkalinity", _dt.date(2026, 6, 1), 8.4, "dKH"),
-            Reading("frag-tank", "alkalinity", _dt.date(2026, 6, 1), 8.5, "dKH"),
-        ],
-        readings_path,
+        [Reading("reef-a", "alkalinity", _dt.date(2026, 6, 1), 8.4, "dKH")],
+        readings_path_for(data_dir, "reef-a"),
+    )
+    append_readings(
+        [Reading("frag-tank", "alkalinity", _dt.date(2026, 6, 1), 8.5, "dKH")],
+        readings_path_for(data_dir, "frag-tank"),
     )
 
     resp = test_client.post("/tank/reef-a/delete")
@@ -264,8 +274,9 @@ def test_delete_tank_route_removes_tank_and_readings(client):
     assert "Reef A" not in shelf
     assert "Frag Tank" in shelf
 
-    # The deleted tank's readings are purged; the other tank's remain.
-    remaining = load_readings(readings_path).readings
+    # The deleted tank's data directory is gone; the other tank's remains.
+    assert not readings_path_for(data_dir, "reef-a").exists()
+    remaining = load_readings(readings_path_for(data_dir, "frag-tank")).readings
     assert [r.tank for r in remaining] == ["frag-tank"]
 
 

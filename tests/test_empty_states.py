@@ -29,7 +29,7 @@ from fishy.config import (
     Tank,
     TargetRange,
 )
-from fishy.storage import COLUMNS, Reading, append_reading
+from fishy.storage import COLUMNS, Reading, append_reading, readings_path_for
 
 
 # --------------------------------------------------------------------------- #
@@ -56,12 +56,12 @@ def _client(tmp_path, *, tanks=None, parameters=None):
     tanks = tanks if tanks is not None else [Tank(id="reef-a", label="Reef A")]
     parameters = parameters if parameters is not None else _params()
     config = Config(tanks=tanks, parameters=parameters)
-    readings_path = tmp_path / "readings.csv"
+    readings_path = readings_path_for(tmp_path, "reef-a")
     app = create_app(
         {
             "TESTING": True,
             "FISHY_CONFIG": config,
-            "FISHY_READINGS_PATH": readings_path,
+            "FISHY_DATA_DIR": tmp_path,
         }
     )
     return app.test_client(), readings_path
@@ -76,6 +76,8 @@ def _write_csv(path, data_rows):
     """
     header = ",".join(COLUMNS)
     body = "\n".join(data_rows)
+    # The per-tank directory (e.g. <data_dir>/reef-a/) may not exist yet.
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(header + "\n" + body + "\n", encoding="utf-8")
 
 
@@ -280,12 +282,12 @@ def test_partial_content_renders_placeholders_not_errors(tmp_path):
         parameters=_params(),
         content_dirs=[content_dir],
     )
-    readings_path = tmp_path / "readings.csv"
+    readings_path = readings_path_for(tmp_path, "reef-a")
     app = create_app(
         {
             "TESTING": True,
             "FISHY_CONFIG": config,
-            "FISHY_READINGS_PATH": readings_path,
+            "FISHY_DATA_DIR": tmp_path,
         }
     )
     client = app.test_client()

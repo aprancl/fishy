@@ -60,7 +60,8 @@ fishy/
 │   ├── <parameter>.md     # Per-parameter reference/action-guide text
 │   └── _template.md       # Fillable template for custom parameters
 ├── data/
-│   └── readings.csv       # Your readings (created on first save; commit this)
+│   └── <tank_id>/
+│       └── readings.csv   # That tank's readings (created on first save; commit this)
 ├── tests/                 # pytest suite (unit / integration / smoke)
 ├── requirements.txt       # Runtime dependencies (Flask only)
 ├── requirements-dev.txt   # Dev dependencies (adds pytest)
@@ -70,13 +71,14 @@ fishy/
 Everything under `config/`, `content/`, and `data/` is plain text and meant to
 be edited by hand and committed to git.
 
-## Your data: the readings CSV
+## Your data: the readings CSVs
 
-All reading state lives in a single file, `data/readings.csv`, stored in
-**long/tidy** form — **one row per reading**. The file is created automatically
-the first time you save a reading (until then the app shows an empty/first-run
-state), so you don't have to create it yourself. The column order is stable and
-load-bearing for clean git diffs:
+Reading state lives **one CSV per tank**, at `data/<tank_id>/readings.csv`,
+stored in **long/tidy** form — **one row per reading**. Each tank's directory
+and file are created automatically the first time you save a reading for that
+tank (until then the app shows an empty/first-run state), so you don't have to
+create them yourself. Deleting a tank removes its `data/<tank_id>/` directory.
+The column order is stable and load-bearing for clean git diffs:
 
 | Column      | Meaning                                            | Example        |
 |-------------|----------------------------------------------------|----------------|
@@ -237,7 +239,7 @@ Your reading log *is* the data, so committing it to git gives you a full,
 diffable history and a backup:
 
 ```bash
-git add data/readings.csv          # after logging readings
+git add data/                      # after logging readings (one CSV per tank)
 git commit -m "Log readings for the week"
 ```
 
@@ -278,7 +280,7 @@ the named issue and restart. Recoverable problems — a duplicate id or an
 inverted `min > max` range — don't stop the app; they're surfaced as warnings
 and the offending entry is skipped.
 
-**Malformed rows in `readings.csv`.** Bad rows (missing a required field, an
+**Malformed rows in a tank's `readings.csv`.** Bad rows (missing a required field, an
 unparseable date, or a non-numeric `value`) are **skipped with a warning** that
 names the row number; every valid row still loads. Fix the named row in your
 editor — check that the six columns are present and the `date` is `YYYY-MM-DD`
